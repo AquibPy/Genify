@@ -1,6 +1,5 @@
 import os
 from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt
-import streamlit as st
 from langchain_google_genai import GoogleGenerativeAI
 from langchain.document_loaders.csv_loader import CSVLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
