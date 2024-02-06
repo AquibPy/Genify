@@ -10,10 +10,7 @@ python-dotenv
 python-multipart
 PyPDF2
 unstructured
-python-magic-bin
+# python-magic-bin
 youtube_transcript_api
 llama-index
 pypdf
-
-python-jose[cryptography] 
-passlib
