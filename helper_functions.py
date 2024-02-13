@@ -114,8 +114,7 @@ def get_gemini_pdf(pdf):
     chunks = text_splitter.split_text(text)
     embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
     vector_store = FAISS.from_texts(chunks, embedding=embeddings)
-
-    llm = GoogleGenerativeAI(model="gemini-pro",temperature=0.3)
+    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     retriever = vector_store.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
         template=prompt_pdf, input_variables=["context", "question"]
