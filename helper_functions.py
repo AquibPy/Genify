@@ -1,6 +1,6 @@
 import os
-from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt
-from langchain_google_genai import GoogleGenerativeAI
+from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,prompt_pdf
+from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings
 from langchain.document_loaders.csv_loader import CSVLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -11,8 +11,10 @@ from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
+from PyPDF2 import PdfReader
 
 load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0)
 
@@ -105,6 +107,28 @@ def extract_transcript_details(youtube_video_url):
 
     except Exception as e:
         raise e
+
+def get_gemini_pdf(pdf):
+    text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    chunks = text_splitter.split_text(text)
+    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
+    vector_store = FAISS.from_texts(chunks, embedding=embeddings)
+
+    llm = GoogleGenerativeAI(model="gemini-pro",temperature=0.3)
+    retriever = vector_store.as_retriever(score_threshold=0.7)
+    PROMPT = PromptTemplate(
+        template=prompt_pdf, input_variables=["context", "question"]
+    )
+
+    chain = RetrievalQA.from_chain_type(llm=llm,
+                                        chain_type="stuff",
+                                        retriever=retriever,
+                                        input_key="query",
+                                        return_source_documents=True,
+                                        chain_type_kwargs={"prompt": PROMPT})
+
+    return chain
 
 if __name__ == "__main__":
     create_vector_db()
