@@ -85,3 +85,17 @@ def health_app_gemini(image_file: UploadFile = File(...), height: str = Form(165
     output = get_gemini_response_health(image_parts, health_prompt)
     json_compatible_data = jsonable_encoder(output)
     return JSONResponse(content=json_compatible_data)
+    
+@app.post("/blog_generator",description="This route will generate the blog based on the desired topic.")
+def blogs(topic: str = Form("Generative AI")):
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        blog_prompt=f"""
+               You are expert in blog writting. 
+               write a blog on the topic {topic}. 
+               Use a friendly and informative tone, and include examples and tips to encourage readers to get started with topic provided.
+            """
+        response=model.generate_content(blog_prompt)
+        return ResponseText(response=response.text)
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
