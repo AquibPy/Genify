@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
 from PyPDF2 import PdfReader
+import sqlite3
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -128,6 +129,22 @@ def get_gemini_pdf(pdf):
                                         chain_type_kwargs={"prompt": PROMPT})
 
     return chain
+
+def read_sql_query(query,db):
+    conn=sqlite3.connect(db)
+    cur=conn.cursor()
+    cur.execute(query)
+    rows=cur.fetchall()
+    conn.commit()
+    conn.close()
+    for row in rows:
+        print(row)
+    return rows
+
+def remove_substrings(input_string):
+    modified_string = input_string.replace("/n", "")
+    modified_string = modified_string.replace("/", "")
+    return modified_string
 
 if __name__ == "__main__":
     create_vector_db()

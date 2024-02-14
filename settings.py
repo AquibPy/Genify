@@ -1,5 +1,6 @@
 PALM_MODEL = "models/text-bison-001"
 FAQ_FILE = 'data\\faqs.csv'
+EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
 qa_prompt = """
@@ -27,4 +28,16 @@ prompt_pdf = """
     Question: \n{question}\n
 
     Answer:
+    """
+
+text2sql_prompt = """
+    You are an expert in converting English questions to SQL query!
+    The SQL database has the name EMPLOYEES and has the following columns - Employee_ID, Name, 
+    Department, Title, Email, City, Salary, 
+    Work_Experience \n\nFor example,\nExample 1 - How many entries of records are present?, 
+    the SQL command will be something like this SELECT COUNT(*) FROM EMPLOYEES ;
+    \nExample 2 - Tell me all the employees living in Noida city?, 
+    the SQL command will be something like this SELECT * FROM EMPLOYEES 
+    where City="Noida"; 
+    also the sql code should not have ``` in beginning or end and sql word in output
     """

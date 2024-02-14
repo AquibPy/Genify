@@ -3,8 +3,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import List
 from pydantic import BaseModel
-from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,get_gemini_response_health,get_gemini_pdf
-from settings import invoice_prompt,youtube_transcribe_prompt
+from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings
+from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
 import google.generativeai as genai
 
 app = FastAPI(title="Generative AI APIs",
@@ -109,4 +109,16 @@ def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
         return ResponseText(response=out["result"])
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
-    
+
+@app.post("/Text2SQL",description="""This route will generate the SQL query and results from employees table based on the prompt given.
+          \nColumns present in the table are Employee_ID, Name, Department, Title, Email, City, Salary, Work_Experience""")
+def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response=model.generate_content([text2sql_prompt,prompt])
+        output_query = remove_substrings(response.text)
+        print(output_query)
+        output = read_sql_query(remove_substrings(output_query),EMPLOYEE_DB)
+        return {"response" : {"SQL Query":output_query,"Data": output}}
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
