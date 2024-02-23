@@ -2,7 +2,7 @@ import os
 from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,prompt_pdf,question_prompt_template,question_refine_template
 from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings,ChatGoogleGenerativeAI
 from langchain.document_loaders.csv_loader import CSVLoader
-from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader
+from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader,WebBaseLoader
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter,TokenTextSplitter
 from langchain_community.embeddings import GooglePalmEmbeddings
@@ -75,9 +75,9 @@ def get_qa_chain():
     return chain
 
 def get_url_doc_qa(url,doc):
-    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.9)
+    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     if url:
-        loader = UnstructuredURLLoader(urls=url)
+        loader = WebBaseLoader(url)
         data = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=['\n\n', '\n', '.', ','],
