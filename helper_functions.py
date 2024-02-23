@@ -1,13 +1,15 @@
 import os
-from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,prompt_pdf
-from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings
+from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,prompt_pdf,question_prompt_template,question_refine_template
+from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings,ChatGoogleGenerativeAI
 from langchain.document_loaders.csv_loader import CSVLoader
-from langchain_community.document_loaders import UnstructuredURLLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader
+from langchain.docstore.document import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter,TokenTextSplitter
 from langchain_community.embeddings import GooglePalmEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
+from langchain.chains.summarize import load_summarize_chain
 from dotenv import load_dotenv
 import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -145,6 +147,40 @@ def remove_substrings(input_string):
     modified_string = input_string.replace("/n", "")
     modified_string = modified_string.replace("/", "")
     return modified_string
+
+
+def questions_generator(doc):
+    # loader = PdfReader(doc)
+    # data = loader.load()
+
+    question_gen =  "".join(page.extract_text() for page in PdfReader(doc).pages)
+
+    # for page in data:
+    #     question_gen += page.page_content
+        
+    splitter_ques_gen = TokenTextSplitter(
+        chunk_size = 10000,
+        chunk_overlap = 200
+    )
+
+    chunks_ques_gen = splitter_ques_gen.split_text(question_gen)
+
+    document_ques_gen = [Document(page_content=t) for t in chunks_ques_gen]
+
+    # splitter_ans_gen = TokenTextSplitter(chunk_size = 1000,chunk_overlap = 100)
+    # document_answer_gen = splitter_ans_gen.split_documents(document_ques_gen)
+
+    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model="gemini-pro",google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    PROMPT_QUESTIONS = PromptTemplate(template=question_prompt_template, input_variables=["text"])
+    REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=question_refine_template)
+    ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 
+                                            chain_type = "refine", 
+                                            verbose = True, 
+                                            question_prompt=PROMPT_QUESTIONS, 
+                                            refine_prompt=REFINE_PROMPT_QUESTIONS)
+
+    ques = ques_gen_chain.run(document_ques_gen)
+    return ques
 
 if __name__ == "__main__":
     create_vector_db()

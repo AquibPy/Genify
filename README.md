@@ -58,6 +58,11 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/Text2SQL`
 - **Description:** Generate SQL queries and results from an employee database based on user prompts. The endpoint uses Generative AI models to convert text prompts into SQL queries for database operations.
 
+### 9. Questions Generator
+
+- **Route:** `/questions_generator`
+- **Description:** The endpoint uses the pdf and generate the questions.It will be helpful for the students or teachers preparing for their exams or test.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

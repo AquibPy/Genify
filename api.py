@@ -3,9 +3,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import List
 from pydantic import BaseModel
-from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings
-from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
 import google.generativeai as genai
+from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
+from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
+    get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator
 
 app = FastAPI(title="Generative AI APIs",
               summary="This API contains routes of different Gen AI usecases")
@@ -120,5 +121,14 @@ def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
         print(output_query)
         output = read_sql_query(remove_substrings(output_query),EMPLOYEE_DB)
         return {"response" : {"SQL Query":output_query,"Data": output}}
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
+
+@app.post("/questions_generator",description="""The endpoint uses the pdf and generate the questions.
+          \nThis will be helpful for the students or teachers preparing for their exams or test. """)
+def pdf_questions_generator(pdf: UploadFile = File(...)):
+    try:
+        out = questions_generator(pdf.file)
+        return ResponseText(response=remove_substrings(out))
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
