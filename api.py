@@ -4,12 +4,21 @@ from fastapi.responses import JSONResponse
 from typing import List
 from pydantic import BaseModel
 import google.generativeai as genai
+from fastapi.middleware.cors import CORSMiddleware
 from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator
 
 app = FastAPI(title="Generative AI APIs",
               summary="This API contains routes of different Gen AI usecases")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ResponseText(BaseModel):
     response: str
@@ -20,7 +29,7 @@ def home():
     return {"welcome":"Generative AI usecases API"}
 
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
-def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
+async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
     image = image_file.file.read()
     image_parts = [{
             "mime_type": "image/jpeg",
@@ -30,7 +39,7 @@ def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
     return ResponseText(response=output)
 
 @app.post("/qa_from_faqs",description="The endpoint uses the retrieved question-answer to generate a response to the user's prompt")
-def question_answer(prompt: str = Form(...)):
+async def question_answer(prompt: str = Form(...)):
     try:
         chain = get_qa_chain()
         out = chain.invoke(prompt)
@@ -39,7 +48,7 @@ def question_answer(prompt: str = Form(...)):
         return ResponseText(response=f"Error: {str(e)}")
 
 @app.post("/qa_url_doc",description="In this route just add the doc or  url(of any news article,blogs etc) and then ask the question in the prompt ")
-def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(None), prompt: str = Form(...)):
+async def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(None), prompt: str = Form(...)):
     try:
         if url:
             chain = get_url_doc_qa(url,documents)
@@ -56,7 +65,7 @@ def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(None),
         return ResponseText(response=f"Error: {str(e)}")
 
 @app.post("/youtube_video_transcribe_summarizer",description="The endpoint uses Youtube URL to generate a summary of a video")
-def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
+async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
     try:
         model = genai.GenerativeModel("gemini-pro")
         transcript_text = extract_transcript_details(url)
@@ -66,7 +75,7 @@ def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
         return ResponseText(response=f"Error: {str(e)}")
     
 @app.post("/nutritionist_expert",description="This route need image,height(cm),weight(kg) then it extracts edible objects from image and return breif about calories to burn")
-def health_app_gemini(image_file: UploadFile = File(...), height: str = Form(165),weight:str = Form(70)):
+async def health_app_gemini(image_file: UploadFile = File(...), height: str = Form(165),weight:str = Form(70)):
     image = image_file.file.read()
     image_parts = [{
             "mime_type": "image/jpeg",
@@ -88,7 +97,7 @@ def health_app_gemini(image_file: UploadFile = File(...), height: str = Form(165
     return JSONResponse(content=json_compatible_data)
     
 @app.post("/blog_generator",description="This route will generate the blog based on the desired topic.")
-def blogs(topic: str = Form("Generative AI")):
+async def blogs(topic: str = Form("Generative AI")):
     try:
         model = genai.GenerativeModel("gemini-pro")
         blog_prompt=f"""
@@ -102,7 +111,7 @@ def blogs(topic: str = Form("Generative AI")):
         return ResponseText(response=f"Error: {str(e)}")
 
 @app.post("/talk2PDF",description="The endpoint uses the pdf and give the answer based on the prompt provided")
-def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
+async def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
     try:
         # contents = [i.file.read().decode("utf-8") for i  in pdf ]
         chain = get_gemini_pdf(pdf.file)
@@ -113,7 +122,7 @@ def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
 
 @app.post("/Text2SQL",description="""This route will generate the SQL query and results from employees table based on the prompt given.
           \nColumns present in the table are Employee_ID, Name, Department, Title, Email, City, Salary, Work_Experience""")
-def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
+async def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
     try:
         model = genai.GenerativeModel("gemini-pro")
         response=model.generate_content([text2sql_prompt,prompt])
@@ -126,7 +135,7 @@ def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
 
 @app.post("/questions_generator",description="""The endpoint uses the pdf and generate the questions.
           \nThis will be helpful for the students or teachers preparing for their exams or test. """)
-def pdf_questions_generator(pdf: UploadFile = File(...)):
+async def pdf_questions_generator(pdf: UploadFile = File(...)):
     try:
         out = questions_generator(pdf.file)
         return ResponseText(response=remove_substrings(out))
