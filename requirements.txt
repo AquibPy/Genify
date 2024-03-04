@@ -13,3 +13,4 @@ unstructured
 youtube_transcript_api
 llama-index
 pypdf
+pymongo
