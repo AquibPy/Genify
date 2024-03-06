@@ -1,13 +1,14 @@
 from fastapi import FastAPI,Form,File,UploadFile
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse,RedirectResponse
 from typing import List
 from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
 from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
+from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
-    get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,database_connection_mongodb
+    get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator
 
 app = FastAPI(title="Generative AI APIs",
               summary="This API contains routes of different Gen AI usecases")
@@ -24,9 +25,9 @@ class ResponseText(BaseModel):
     response: str
 
 
-@app.get("/")
+@app.get("/", response_class=RedirectResponse)
 def home():
-    return {"welcome":"Generative AI usecases API"}
+    return "/docs"
 
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
 async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
@@ -36,7 +37,7 @@ async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
             "data": image
         }]
     output = get_gemini_response(invoice_prompt, image_parts, prompt)
-    db = database_connection_mongodb()
+    db = MongoDB()
     payload = {
             "endpoint" : "/invoice_extractor",
             "prompt" : prompt,
@@ -52,7 +53,7 @@ async def question_answer(prompt: str = Form(...)):
     try:
         chain = get_qa_chain()
         out = chain.invoke(prompt)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
                 "endpoint" : "/qa_from_faqs",
                 "prompt" : prompt,
@@ -78,7 +79,7 @@ async def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(
         else:
             raise Exception("Please provide either a URL or upload a document file.")
         out = chain.invoke(prompt)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
                 "endpoint" : "/qa_url_doc",
                 "prompt" : prompt,
@@ -99,7 +100,7 @@ async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
         model = genai.GenerativeModel("gemini-pro")
         transcript_text = extract_transcript_details(url)
         response=model.generate_content(youtube_transcribe_prompt+transcript_text)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
                 "endpoint" : "/youtube_video_transcribe_summarizer",
                 "url" : url,
@@ -132,7 +133,7 @@ async def health_app_gemini(image_file: UploadFile = File(...), height: str = Fo
             """
     output = get_gemini_response_health(image_parts, health_prompt)
     json_compatible_data = jsonable_encoder(output)
-    db = database_connection_mongodb()
+    db = MongoDB()
     payload = {
             "endpoint" : "/nutritionist_expert",
             "height (in cms)" : height,
@@ -154,7 +155,7 @@ async def blogs(topic: str = Form("Generative AI")):
                Use a friendly and informative tone, and include examples and tips to encourage readers to get started with topic provided.
             """
         response=model.generate_content(blog_prompt)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
             "endpoint" : "/blog_generator",
             "topic" : topic,
@@ -173,7 +174,7 @@ async def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
         # contents = [i.file.read().decode("utf-8") for i  in pdf ]
         chain = get_gemini_pdf(pdf.file)
         out = chain.invoke(prompt)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
             "endpoint" : "/talk2PDF",
             "prompt" : prompt,
@@ -195,7 +196,7 @@ async def sql_query(prompt: str = Form("Tell me the employees living in city Noi
         output_query = remove_substrings(response.text)
         print(output_query)
         output = read_sql_query(remove_substrings(output_query),EMPLOYEE_DB)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
             "endpoint" : "/Text2SQL",
             "prompt" : prompt,
@@ -214,7 +215,7 @@ async def sql_query(prompt: str = Form("Tell me the employees living in city Noi
 async def pdf_questions_generator(pdf: UploadFile = File(...)):
     try:
         out = questions_generator(pdf.file)
-        db = database_connection_mongodb()
+        db = MongoDB()
         payload = {
             "endpoint" : "/questions_generator",
             "output" : out
