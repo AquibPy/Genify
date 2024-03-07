@@ -1,4 +1,4 @@
-# Generative AI APIs
+# Genify
 
 This project contains a collection of APIs that leverage Generative AI models to perform various tasks. These APIs are designed to address different use cases such as extracting information from invoices, generating responses from FAQs, summarizing YouTube videos, generating blog posts, analyzing health-related data from images, and executing SQL queries from text prompts for database operations related to employee data.
 
