@@ -10,7 +10,6 @@ class MongoDB():
         self.collection_name = os.getenv("MONGO_COLLECTION")
         try:
             self.client = MongoClient(f"mongodb+srv://{self.username}:{self.password}@cluster0.sdx7i86.mongodb.net/{self.dbname}") ## i am using mongodb atlas. Use can use your local mongodb
-            print(self.client)
             database = self.dbname
             collection = self.collection_name
             cursor = self.client[database]

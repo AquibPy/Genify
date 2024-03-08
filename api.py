@@ -13,6 +13,8 @@ from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,ext
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
 
+app.allow_dangerous_deserialization = True
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
