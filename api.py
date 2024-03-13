@@ -145,7 +145,7 @@ async def health_app_gemini(image_file: UploadFile = File(...), height: str = Fo
     mongo_data = {"Document": payload}
     result = db.insert_data(mongo_data)
     print(result)
-    return JSONResponse(content=json_compatible_data)
+    return ResponseText(response=json_compatible_data)
     
 @app.post("/blog_generator",description="This route will generate the blog based on the desired topic.")
 async def blogs(topic: str = Form("Generative AI")):
