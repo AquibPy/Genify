@@ -12,15 +12,18 @@ jobs:
   test:
     name: Test FastAPI Application
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version:["3.9", "3.10", "3.11"]
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -36,7 +39,7 @@ jobs:
           MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
           MONGO_COLLECTION: ${{ secrets.MONGO_COLLECTION }}
         run: |
-          echo "Google API Key: Succesfull!!!"
+          echo "Google API Key: Success!!!"
 
       - name: Run Tests
         run: |
