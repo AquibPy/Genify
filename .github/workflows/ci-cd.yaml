@@ -1,5 +1,6 @@
 name: Run Tests
-
+env:
+  NAME: 'env'
 on:
   push:
     branches:
