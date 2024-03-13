@@ -32,12 +32,12 @@ jobs:
 
       - name: Set Google API Key
         env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
-          MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
-          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
-          MONGO_COLLECTION: ${{ secrets.MONGO_COLLECTION }}
+          GOOGLE_API_KEY: ${{ evn.GOOGLE_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ env.HUGGINGFACE_API_KEY }}
+          MONGO_USERNAME: ${{ evn.MONGO_USERNAME }}
+          MONGO_PASSWORD: ${{ evn.MONGO_PASSWORD }}
+          MONGO_DBNAME: ${{ evn.MONGO_DBNAME }}
+          MONGO_COLLECTION: ${{ evn.MONGO_COLLECTION }}
         run: |
           echo "Google API Key: Success!!!"
 
