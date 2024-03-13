@@ -30,17 +30,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set Google API Key
-        env:
-          GOOGLE_API_KEY: ${{ vars.GOOGLE_API_KEY }}
-          HUGGINGFACE_API_KEY: ${{ vars.HUGGINGFACE_API_KEY }}
-          MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
-          MONGO_PASSWORD: ${{ vars.MONGO_PASSWORD }}
-          MONGO_DBNAME: ${{ vars.MONGO_DBNAME }}
-          MONGO_COLLECTION: ${{ vars.MONGO_COLLECTION }}
-        run: |
-          echo "Google API Key: Success!!!"
-
       - name: Run Tests
         run: |
           pytest test_main.py
