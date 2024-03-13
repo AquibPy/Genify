@@ -1,6 +1,5 @@
 name: Run Tests
-env:
-  NAME: 'env'
+
 on:
   push:
     branches:
@@ -33,12 +32,12 @@ jobs:
 
       - name: Set Google API Key
         env:
-          GOOGLE_API_KEY: ${{ env.GOOGLE_API_KEY }}
-          HUGGINGFACE_API_KEY: ${{ env.HUGGINGFACE_API_KEY }}
-          MONGO_USERNAME: ${{ env.MONGO_USERNAME }}
-          MONGO_PASSWORD: ${{ env.MONGO_PASSWORD }}
-          MONGO_DBNAME: ${{ env.MONGO_DBNAME }}
-          MONGO_COLLECTION: ${{ env.MONGO_COLLECTION }}
+          GOOGLE_API_KEY: ${{ vars.GOOGLE_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ vars.HUGGINGFACE_API_KEY }}
+          MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+          MONGO_PASSWORD: ${{ vars.MONGO_PASSWORD }}
+          MONGO_DBNAME: ${{ vars.MONGO_DBNAME }}
+          MONGO_COLLECTION: ${{ vars.MONGO_COLLECTION }}
         run: |
           echo "Google API Key: Success!!!"
 
