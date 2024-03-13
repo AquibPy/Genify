@@ -7,7 +7,7 @@ db = MongoDB()
 
 
 def test_invoice_extractor():
-    image_file = open("data\invoice.png", "rb")
+    image_file = open("data/invoice.png", "rb")
     files = {"image_file": image_file}
     data = {"prompt": "To whom this invoice belongs"}
 
@@ -37,7 +37,7 @@ def test_youtube_video_transcribe_summarizer():
     assert "response" in response.json()
 
 def test_nutritionist_expert():
-    image_file = open(r"data\burger.jpg", "rb")
+    image_file = open("data/burger.jpg", "rb")
     data = {"height": "165", "weight": "70"}
 
     response = client.post("/nutritionist_expert", files={"image_file": image_file}, data=data)
@@ -45,7 +45,7 @@ def test_nutritionist_expert():
     assert "response" in response.json()
 
 def test_talk2PDF():
-    pdf_file = open(r"data\yolo.pdf", "rb")
+    pdf_file = open("data/yolo.pdf", "rb")
     data = {"prompt": "Summary in 200 words"}
 
     response = client.post("/talk2PDF", files={"pdf": pdf_file}, data=data)
@@ -53,7 +53,7 @@ def test_talk2PDF():
     assert "response" in response.json()
 
 def test_questions_generator():
-    pdf_file = open(r"data\yolo.pdf", "rb")
+    pdf_file = open("data/yolo.pdf", "rb")
 
     # Make a request to the questions_generator endpoint
     response = client.post("/questions_generator", files={"pdf": pdf_file})
