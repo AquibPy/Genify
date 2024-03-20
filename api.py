@@ -248,6 +248,7 @@ async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('m
     db = MongoDB()
     payload = {
         "endpoint" : "/chat_groq",
+        "question" : question,
         "model" : model,
         "conversational_memory_length": conversational_memory_length,
         "output" : response['response']
