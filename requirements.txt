@@ -14,3 +14,5 @@ llama-index
 pypdf
 pymongo
 pytest
+groq
+langchain-groq

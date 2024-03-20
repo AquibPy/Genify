@@ -1,7 +1,8 @@
+import os
 from fastapi import FastAPI,Form,File,UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse,RedirectResponse
-from typing import List
+from typing import List,Optional
 from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +10,9 @@ from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EM
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator
+from langchain_groq import ChatGroq
+from langchain.chains import ConversationChain
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
@@ -228,3 +232,26 @@ async def pdf_questions_generator(pdf: UploadFile = File(...)):
         return ResponseText(response=remove_substrings(out))
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
+    
+@app.post("/chat_groq", description= """This route uses groq for faster response using Language Processing Unit(LPU).
+          \n In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096 and gemma-7b-it.
+          \n conversational_memory_length ranges from 1 to 10. It keeps a list of the interactions of the conversation over time.
+          It only uses the last K interactions """)
+async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('mixtral-8x7b-32768'), 
+    conversational_memory_length: Optional[int] = Form(5)):
+
+    memory=ConversationBufferWindowMemory(k=conversational_memory_length)
+    groq_chat = ChatGroq(groq_api_key= os.environ['GROQ_API_KEY'], model_name=model)
+    conversation = ConversationChain(llm=groq_chat,memory=memory)
+
+    response = conversation.invoke(question)
+    db = MongoDB()
+    payload = {
+        "endpoint" : "/chat_groq",
+        "model" : model,
+        "conversational_memory_length": conversational_memory_length,
+        "output" : response['response']
+        }
+    mongo_data = {"Document": payload}
+    result = db.insert_data(mongo_data)
+    return {"Chatbot": response['response']}

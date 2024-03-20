@@ -63,6 +63,13 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/questions_generator`
 - **Description:** The endpoint uses the pdf and generate the questions.It will be helpful for the students or teachers preparing for their exams or test.
 
+### 10. ChatBot Using Groq
+
+- **Route:** `/chat_groq`
+- **Description:** This route utilizes Groq for enhanced language processing speed, with a default model input of mixtral-8x7b-32768, but offering alternatives like llama2-70b-4096 and gemma-7b-it, and a conversational memory length option of 1 to 10, which maintains a list of recent interactions in the conversation, considering only the latest K interactions.
+
+
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
