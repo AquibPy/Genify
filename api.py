@@ -13,6 +13,7 @@ from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,ext
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain_core.prompts import ChatPromptTemplate
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
@@ -239,20 +240,51 @@ async def pdf_questions_generator(pdf: UploadFile = File(...)):
           It only uses the last K interactions """)
 async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('mixtral-8x7b-32768'), 
     conversational_memory_length: Optional[int] = Form(5)):
+    try:
+        memory=ConversationBufferWindowMemory(k=conversational_memory_length)
+        groq_chat = ChatGroq(groq_api_key= os.environ['GROQ_API_KEY'], model_name=model)
+        conversation = ConversationChain(llm=groq_chat,memory=memory)
 
-    memory=ConversationBufferWindowMemory(k=conversational_memory_length)
-    groq_chat = ChatGroq(groq_api_key= os.environ['GROQ_API_KEY'], model_name=model)
-    conversation = ConversationChain(llm=groq_chat,memory=memory)
+        response = conversation.invoke(question)
+        db = MongoDB()
+        payload = {
+            "endpoint" : "/chat_groq",
+            "question" : question,
+            "model" : model,
+            "conversational_memory_length": conversational_memory_length,
+            "output" : response['response']
+            }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        return {"Chatbot": response['response']}
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
 
-    response = conversation.invoke(question)
-    db = MongoDB()
-    payload = {
-        "endpoint" : "/chat_groq",
-        "question" : question,
-        "model" : model,
-        "conversational_memory_length": conversational_memory_length,
-        "output" : response['response']
-        }
-    mongo_data = {"Document": payload}
-    result = db.insert_data(mongo_data)
-    return {"Chatbot": response['response']}
+
+@app.post("/text_summarizer_groq", description= """This route uses groq for faster response using Language Processing Unit(LPU).
+          \n This route will provide the concise summary from the text provided & and model used is mixtral-8x7b-32768
+           """)
+async def groq_text_summary(input_text: str = Form(...)):
+    try:
+        chat = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768",api_key=os.environ['GROQ_API_KEY'])
+        system = """You are a helpful AI assistant skilled at summarizing text. 
+                Your task is to summarize the following text in a clear and concise manner, capturing the main ideas and key points.
+                Show result in the points.
+            """
+        human = "{text}"
+        prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
+
+        chain = prompt | chat
+        summary = chain.invoke({"text": input_text})
+        summary_text = summary.content
+        db = MongoDB()
+        payload = {
+            "endpoint" : "/text_summarizer_groq",
+            "input_text" : input_text,
+            "summary" : summary_text
+            }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        return {"Summary": summary_text}
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")

@@ -68,6 +68,11 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/chat_groq`
 - **Description:** This route utilizes Groq for enhanced language processing speed, with a default model input of mixtral-8x7b-32768, but offering alternatives like llama2-70b-4096 and gemma-7b-it, and a conversational memory length option of 1 to 10, which maintains a list of recent interactions in the conversation, considering only the latest K interactions.
 
+### 11. Text Summarizer
+
+- **Route:** `/text_summarizer_groq`
+- **Description:**  Dive into a realm of creativity with our text summarization endpoint, where the model mixtral-8x7b-32768 crafts concise summaries from your input text, delivering insights at the speed of thought.
+
 
 
 ## Usage
