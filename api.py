@@ -299,6 +299,7 @@ async def talk_pd_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
         db = MongoDB()
         payload = {
             "endpoint" : "/RAG_PDF_Groq",
+            "model" : model,
             "prompt" : prompt,
             "output" : out
         }
