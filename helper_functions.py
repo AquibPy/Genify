@@ -10,6 +10,10 @@ from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.chains.summarize import load_summarize_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -61,7 +65,7 @@ def create_vector_db():
 
 def get_qa_chain():
     llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
-    vectordb = FAISS.load_local(VECTORDB_PATH,PaLM_embeddings)
+    vectordb = FAISS.load_local(VECTORDB_PATH,PaLM_embeddings,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
         template=qa_prompt, input_variables=["context", "question"]
@@ -183,6 +187,30 @@ def questions_generator(doc):
 
     ques = ques_gen_chain.run(document_ques_gen)
     return ques
+
+def groq_pdf(pdf):
+    llm = ChatGroq(
+            api_key=os.environ['GROQ_API_KEY'],
+            model_name='mixtral-8x7b-32768'
+    )
+    text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    chunks = text_splitter.split_text(text)
+    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
+    vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
+    retriever = vectorstore.as_retriever()
+    rag_template = """Answer the question based only on the following context:
+    {context}
+    Question: {question}
+    """
+    rag_prompt = ChatPromptTemplate.from_template(rag_template)
+    rag_chain = (
+        {"context": retriever, "question": RunnablePassthrough()}
+        | rag_prompt
+        | llm
+        | StrOutputParser()
+    )
+    return rag_chain
 
 if __name__ == "__main__":
     create_vector_db()
