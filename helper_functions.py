@@ -188,10 +188,10 @@ def questions_generator(doc):
     ques = ques_gen_chain.run(document_ques_gen)
     return ques
 
-def groq_pdf(pdf):
+def groq_pdf(pdf,model):
     llm = ChatGroq(
             api_key=os.environ['GROQ_API_KEY'],
-            model_name='mixtral-8x7b-32768'
+            model_name=model
     )
     text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)

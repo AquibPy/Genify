@@ -73,7 +73,10 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/text_summarizer_groq`
 - **Description:**  Dive into a realm of creativity with our text summarization endpoint, where the model mixtral-8x7b-32768 crafts concise summaries from your input text, delivering insights at the speed of thought.
 
+### 12. RAG Using Groq
 
+- **Route:** `/RAG_PDF_Groq`
+- **Description:** This endpoint uses the pdf and give the answer based on the prompt provided using Groq,with a default model input of llama2-70b-4096, but offering alternatives like mixtral-8x7b-32768 and gemma-7b-it.
 
 ## Usage
 
