@@ -33,8 +33,8 @@ class ResponseText(BaseModel):
 
 
 @app.get("/", response_class=RedirectResponse)
-def home():
-    return "/docs"
+async def home():
+    return RedirectResponse("/docs")
 
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
 async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
