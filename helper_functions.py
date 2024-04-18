@@ -1,11 +1,11 @@
 import os
-from settings import PALM_MODEL,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,prompt_pdf,question_prompt_template,question_refine_template
+from settings import GOOGLE_EMBEDDING,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,\
+prompt_pdf,question_prompt_template,question_refine_template, GEMINI_PRO
 from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings,ChatGoogleGenerativeAI
 from langchain.document_loaders.csv_loader import CSVLoader
 from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader,WebBaseLoader
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter,TokenTextSplitter
-from langchain_community.embeddings import GooglePalmEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
@@ -19,14 +19,15 @@ import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
 from PyPDF2 import PdfReader
 import sqlite3
-
+from langchain_community.embeddings import GooglePalmEmbeddings
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0)
 
 PaLM_embeddings = GooglePalmEmbeddings(google_api_key=os.getenv("GOOGLE_API_KEY"))
+
+google_embedding = GoogleGenerativeAIEmbeddings(model = GOOGLE_EMBEDDING)
 
 '''
 if you want you can try instructor embeddings also. Below is thge code :
@@ -64,7 +65,7 @@ def create_vector_db():
     vectordb.save_local(VECTORDB_PATH)
 
 def get_qa_chain():
-    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     vectordb = FAISS.load_local(VECTORDB_PATH,PaLM_embeddings,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
@@ -81,20 +82,21 @@ def get_qa_chain():
     return chain
 
 def get_url_doc_qa(url,doc):
-    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     if url:
         loader = WebBaseLoader(url)
         data = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=['\n\n', '\n', '.', ','],
-                chunk_size=1000
+                chunk_size=1000,
+                chunk_overlap = 200
             )
         docs = text_splitter.split_documents(data)
     else:
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=100,chunk_overlap=20,length_function=len,is_separator_regex=False)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200,length_function=len,is_separator_regex=False)
         docs = text_splitter.create_documents(doc)
 
-    vectorstore = FAISS.from_documents(documents = docs,embedding=PaLM_embeddings)
+    vectorstore = FAISS.from_documents(documents = docs,embedding=google_embedding)
     chain = RetrievalQA.from_chain_type(llm=llm,
                                         chain_type="stuff",
                                         retriever=vectorstore.as_retriever(),
@@ -121,9 +123,8 @@ def get_gemini_pdf(pdf):
     text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
-    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
-    vector_store = FAISS.from_texts(chunks, embedding=embeddings)
-    llm = GoogleGenerativeAI(model=PALM_MODEL, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    vector_store = FAISS.from_texts(chunks, embedding=google_embedding)
+    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     retriever = vector_store.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
         template=prompt_pdf, input_variables=["context", "question"]
@@ -176,7 +177,7 @@ def questions_generator(doc):
     # splitter_ans_gen = TokenTextSplitter(chunk_size = 1000,chunk_overlap = 100)
     # document_answer_gen = splitter_ans_gen.split_documents(document_ques_gen)
 
-    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model="gemini-pro",google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= GEMINI_PRO,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     PROMPT_QUESTIONS = PromptTemplate(template=question_prompt_template, input_variables=["text"])
     REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=question_refine_template)
     ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 
@@ -196,8 +197,7 @@ def groq_pdf(pdf,model):
     text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
-    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
-    vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
+    vectorstore = FAISS.from_texts(chunks, embedding=google_embedding)
     retriever = vectorstore.as_retriever()
     rag_template = """Answer the question based only on the following context:
     {context}

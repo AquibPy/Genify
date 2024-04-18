@@ -1,4 +1,6 @@
-PALM_MODEL = "models/text-bison-001"
+GEMINI_PRO = "gemini-pro"
+GEMINI_PRO_1_5 = "gemini-1.5-pro-latest"
+GOOGLE_EMBEDDING = "models/embedding-001"
 FAQ_FILE = 'data\\faqs.csv'
 EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"

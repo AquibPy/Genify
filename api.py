@@ -6,7 +6,7 @@ from typing import List,Optional
 from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
-from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB
+from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf
@@ -104,7 +104,7 @@ async def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(
 @app.post("/youtube_video_transcribe_summarizer",description="The endpoint uses Youtube URL to generate a summary of a video")
 async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel(GEMINI_PRO)
         transcript_text = extract_transcript_details(url)
         response=model.generate_content(youtube_transcribe_prompt+transcript_text)
         db = MongoDB()
@@ -155,7 +155,7 @@ async def health_app_gemini(image_file: UploadFile = File(...), height: str = Fo
 @app.post("/blog_generator",description="This route will generate the blog based on the desired topic.")
 async def blogs(topic: str = Form("Generative AI")):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel(GEMINI_PRO_1_5)
         blog_prompt=f"""
                You are expert in blog writting. 
                write a blog on the topic {topic}. 
@@ -198,7 +198,7 @@ async def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
           \nColumns present in the table are Employee_ID, Name, Department, Title, Email, City, Salary, Work_Experience""")
 async def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel(GEMINI_PRO_1_5)
         response=model.generate_content([text2sql_prompt,prompt])
         output_query = remove_substrings(response.text)
         print(output_query)
