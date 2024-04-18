@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
-    get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf
+    get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
+    summarize_audio
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -309,3 +310,19 @@ async def talk_pd_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
         return ResponseText(response=out)
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
+
+@app.post("/summarize_audio",description="""Endpoint to summarize an uploaded audio file using gemini-1.5-pro-latest.""")
+async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
+    try:
+        summary_text = await summarize_audio(audio_file)
+        db = MongoDB()
+        payload = {
+            "endpoint" : "/summarize_audio",
+            "output" : summary_text
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=summary_text)
+    except Exception as e:
+        return {"error": str(e)}

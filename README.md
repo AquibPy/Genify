@@ -78,6 +78,11 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/RAG_PDF_Groq`
 - **Description:** This endpoint uses the pdf and give the answer based on the prompt provided using Groq,with a default model input of llama2-70b-4096, but offering alternatives like mixtral-8x7b-32768 and gemma-7b-it.
 
+### 13. Audio Summarizer
+
+- **Route:** `/summarize_audio`
+- **Description:** Endpoint to summarize an uploaded audio file using gemini-1.5-pro-latest.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

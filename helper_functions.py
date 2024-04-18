@@ -20,6 +20,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from PyPDF2 import PdfReader
 import sqlite3
 from langchain_community.embeddings import GooglePalmEmbeddings
+import tempfile
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -211,6 +212,28 @@ def groq_pdf(pdf,model):
         | StrOutputParser()
     )
     return rag_chain
+
+async def summarize_audio(audio_file):
+    """Summarize the audio using Google's Generative API."""
+    model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
+
+    # Save the audio file to a temporary file
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.'+audio_file.filename.split('.')[-1]) as tmp_file:
+            tmp_file.write(await audio_file.read())
+            audio_file_path = tmp_file.name
+    except Exception as e:
+        raise Exception(f"Error handling uploaded file: {e}")
+
+    audio_file = genai.upload_file(path=audio_file_path)
+    response = model.generate_content(
+        [
+            "Please summarize the following audio.",
+            audio_file
+        ]
+    )
+
+    return response.text
 
 if __name__ == "__main__":
     create_vector_db()
