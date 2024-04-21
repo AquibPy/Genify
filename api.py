@@ -236,7 +236,7 @@ async def pdf_questions_generator(pdf: UploadFile = File(...)):
         return ResponseText(response=f"Error: {str(e)}")
     
 @app.post("/chat_groq", description= """This route uses groq for faster response using Language Processing Unit(LPU).
-          \n In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096 and gemma-7b-it.
+          \n In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096, gemma-7b-it, llama3-70b-8192 and llama3-8b-8192.
           \n conversational_memory_length ranges from 1 to 10. It keeps a list of the interactions of the conversation over time.
           It only uses the last K interactions """)
 async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('mixtral-8x7b-32768'), 
@@ -291,7 +291,7 @@ async def groq_text_summary(input_text: str = Form(...)):
         return ResponseText(response=f"Error: {str(e)}")
     
 @app.post("/RAG_PDF_Groq",description="The endpoint uses the pdf and give the answer based on the prompt provided using groq\
-          In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096 and gemma-7b-it.")
+          In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096, gemma-7b-it, llama3-70b-8192 and llama3-8b-8192.")
 async def talk_pd_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
                        model: Optional[str] = Form('llama2-70b-4096')):
     try:
