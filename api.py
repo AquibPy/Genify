@@ -1,7 +1,8 @@
 import os
-from fastapi import FastAPI,Form,File,UploadFile
+from fastapi import FastAPI,Form,File,UploadFile, Request
+from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse,RedirectResponse
+from fastapi.responses import JSONResponse,RedirectResponse,StreamingResponse
 from typing import List,Optional
 from pydantic import BaseModel
 import google.generativeai as genai
@@ -10,7 +11,7 @@ from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EM
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio
+    summarize_audio,chatbot_send_message
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -18,6 +19,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
+
+templates = Jinja2Templates(directory="templates")
 
 app.allow_dangerous_deserialization = True
 
@@ -36,6 +39,11 @@ class ResponseText(BaseModel):
 @app.get("/", response_class=RedirectResponse)
 async def home():
     return RedirectResponse("/docs")
+
+
+@app.get("/chatbot",description=" Talk to chatbot")
+async def chat(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
 async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
@@ -326,3 +334,9 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
         return ResponseText(response=summary_text)
     except Exception as e:
         return {"error": str(e)}
+    
+
+@app.post("/stream_chat",description="This route provide the data from LLM in the streaming response.")
+async def stream_chat(message: str = Form(...)):
+    generator = chatbot_send_message(message)
+    return StreamingResponse(generator, media_type="text/event-stream")

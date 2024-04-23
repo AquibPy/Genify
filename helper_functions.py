@@ -21,6 +21,10 @@ from PyPDF2 import PdfReader
 import sqlite3
 from langchain_community.embeddings import GooglePalmEmbeddings
 import tempfile
+from langchain.callbacks import AsyncIteratorCallbackHandler
+from typing import AsyncIterable
+import asyncio
+from langchain.schema import HumanMessage
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -234,6 +238,32 @@ async def summarize_audio(audio_file):
     )
 
     return response.text
+
+
+async def chatbot_send_message(content: str) -> AsyncIterable[str]:
+    callback = AsyncIteratorCallbackHandler()
+    model = ChatGroq(
+        temperature=0, 
+        groq_api_key=os.environ['GROQ_API_KEY'], 
+        model_name="llama3-70b-8192",
+        streaming=True,
+        verbose=True,
+        callbacks=[callback],
+    )
+
+    task = asyncio.create_task(
+        model.agenerate(messages=[[HumanMessage(content=content)]])
+    )
+
+    try:
+        async for token in callback.aiter():
+            yield token
+    except Exception as e:
+        print(f"Caught exception: {e}")
+    finally:
+        callback.done.set()
+
+    await task
 
 if __name__ == "__main__":
     create_vector_db()
