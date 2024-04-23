@@ -17,6 +17,11 @@ from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import ChatPromptTemplate
 
+os.environ["LANGCHAIN_TRACING_V2"]="true"
+os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
+os.environ["LANGCHAIN_PROJECT"]="genify"
+os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
+
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
 
@@ -337,6 +342,6 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
     
 
 @app.post("/stream_chat",description="This endpoint streams responses from the language model based on the user's input message.")
-async def stream_chat(message: str = Form(...)):
+async def stream_chat(message: str = Form("What is RLHF in LLM?")):
     generator = chatbot_send_message(message)
     return StreamingResponse(generator, media_type="text/event-stream")
