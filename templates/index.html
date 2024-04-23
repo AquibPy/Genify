@@ -52,7 +52,7 @@
     }
 
     #message {
-      width: 65%; /* Adjusted width */
+      width: 65%;
       padding: 10px;
       border-radius: 10px;
       border: 1px solid #ccc;
@@ -149,6 +149,36 @@
     body.dark-mode #result {
       border-color: #666;
     }
+
+    /* Slider styles */
+    .slider {
+      -webkit-appearance: none;
+      width: 60px;
+      height: 34px;
+      background: #ccc;
+      outline: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+      border-radius: 34px;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      background: #4caf50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 26px;
+      height: 26px;
+      background: #4caf50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
@@ -161,22 +191,19 @@
     </div>
     <div id="mode-switch">
       <label id="dark-mode-label" for="dark-mode">Dark Mode</label>
-      <input type="checkbox" id="dark-mode" onchange="toggleDarkMode()">
+      <input type="range" min="0" max="1" value="0" class="slider" id="dark-mode" onchange="toggleDarkMode()">
     </div>
     <footer>
-        <p>© Made with ❤️ by <a href='https://github.com/AquibPy' target='_blank'>Mohd Aquib</a> </p>
-      </footer>
+      <p>© Made with ❤️ by <a href='https://github.com/AquibPy' target='_blank'>Mohd Aquib</a> </p>
+    </footer>
   </div>
   
-
   <script>
     async function sendMessage() {
       var messageInput = document.getElementById("message");
-      var message = messageInput.value.trim(); // Trim to remove leading/trailing spaces
+      var message = messageInput.value.trim();
   
-      // Check if message is empty
       if (!message) {
-        // If message is empty, do not proceed
         return;
       }
   
@@ -199,20 +226,20 @@
         }
         return reader.read().then(processResult);
       });
-      // Clear the message input after sending
       messageInput.value = '';
     }
 
     function toggleDarkMode() {
       var body = document.body;
       var chatContainer = document.querySelector(".chat-container");
+      var darkModeSlider = document.getElementById("dark-mode");
 
-      if (body.classList.contains("dark-mode")) {
-        body.classList.remove("dark-mode");
-        chatContainer.classList.remove("dark-mode");
-      } else {
+      if (darkModeSlider.value === "1") {
         body.classList.add("dark-mode");
         chatContainer.classList.add("dark-mode");
+      } else {
+        body.classList.remove("dark-mode");
+        chatContainer.classList.remove("dark-mode");
       }
     }
   </script>
