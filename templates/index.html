@@ -1,92 +1,99 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f2f2f2;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f2f2f2;
+      }
 
-        .chat-container {
-            border-radius: 5px;
-            background-color: white;
-            padding: 20px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
+      .chat-container {
+        border-radius: 5px;
+        background-color: white;
+        padding: 20px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
 
-        #result {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
+      #result {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
 
+      #message-container {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      #message {
+        width: 70%;
+        padding: 10px;
+        margin-right: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex-grow: 1;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+      }
+
+      @media (max-width: 480px) {
         #message {
-            width: 70%;
-            padding: 10px;
-            margin-right: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+          width: 100%;
+          margin-right: 0;
+          margin-bottom: 10px;
         }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007BFF;
-            color: white;
-        }
+      }
     </style>
-</head>
-
-<body>
-
+  </head>
+  <body>
     <div class="chat-container">
-        <h1>Chat with AI</h1>
-        <div id="result"></div>
-
-        <input type="text" id="message" placeholder="Type your message here">
+      <h1>Chat with AI</h1>
+      <div id="result"></div>
+      <div id="message-container">
+        <input type="text" id="message" placeholder="Type your message here" />
         <button onclick="sendMessage()">Send Message</button>
+      </div>
     </div>
-
     <script>
-        async function sendMessage() {
-            var message = document.getElementById("message").value;
-            var response = await fetch('http://localhost:8000/stream_chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded' // Set the content type to URL-encoded form data
-                },
-                body: 'message=' + encodeURIComponent(message) // Encode the message and send it as a form parameter
-            });
-
-            var reader = response.body.getReader();
-            var decoder = new TextDecoder('utf-8');
-
-            reader.read().then(function processResult(result) {
-                if (result.done) return;
-                let token = decoder.decode(result.value);
-                if (token.endsWith('.') || token.endsWith('!') || token.endsWith('?')) {
-                    document.getElementById("result").innerHTML += token + "<br>";
-                } else {
-                    document.getElementById("result").innerHTML += token + ' ';
-                }
-                return reader.read().then(processResult);
-            });
-        }
-
+      async function sendMessage() {
+        var message = document.getElementById("message").value;
+        var response = await fetch('http://localhost:8000/stream_chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'message=' + encodeURIComponent(message)
+        });
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder('utf-8');
+        reader.read().then(function processResult(result) {
+          if (result.done) return;
+          let token = decoder.decode(result.value);
+          if (token.endsWith('.') || token.endsWith('!') || token.endsWith('?')) {
+            document.getElementById("result").innerHTML += token + "<br>";
+          } else {
+            document.getElementById("result").innerHTML += token + ' ';
+          }
+          return reader.read().then(processResult);
+        });
+      }
     </script>
-
-</body>
-
+  </body>
 </html>
