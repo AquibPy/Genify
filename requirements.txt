@@ -16,3 +16,4 @@ pymongo
 pytest
 groq
 langchain-groq
+jinja2
