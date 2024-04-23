@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLAMA 3 Chat</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,7 +22,7 @@
       background-color: #f9f9f9;
       padding: 20px;
       max-width: 500px;
-      width: 100%;
+      width: 90%; /* Adjusted width to maintain shape */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
       animation: fadeIn 0.5s ease forwards;
@@ -181,17 +183,17 @@
     }
   </style>
 </head>
-<body>
+<body onload="focusInput()">
   <div class="chat-container">
     <h1>Chat with LLAMA 3 🦙🦙🦙</h1>
-    <div id="result"></div>
+    <div id="result" aria-live="polite" aria-atomic="true"></div>
     <div id="message-container">
-      <input type="text" id="message" placeholder="Type your message here" />
-      <button onclick="sendMessage()">Send Message</button>
+      <input type="text" id="message" placeholder="Type your message here" aria-label="Message input">
+      <button onclick="sendMessage()" aria-label="Send Message">Send Message</button>
     </div>
     <div id="mode-switch">
       <label id="dark-mode-label" for="dark-mode">Dark Mode</label>
-      <input type="range" min="0" max="1" value="0" class="slider" id="dark-mode" onchange="toggleDarkMode()">
+      <input type="range" min="0" max="1" value="0" class="slider" id="dark-mode" aria-label="Dark mode switch" onchange="toggleDarkMode()">
     </div>
     <footer>
       <p>© Made with ❤️ by <a href='https://github.com/AquibPy' target='_blank'>Mohd Aquib</a> </p>
@@ -200,39 +202,47 @@
   
   <script>
     async function sendMessage() {
-      var messageInput = document.getElementById("message");
-      var message = messageInput.value.trim();
+      const messageInput = document.getElementById("message");
+      const message = messageInput.value.trim();
   
       if (!message) {
+        displayErrorMessage("Please enter a message.");
         return;
       }
   
-      var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'message=' + encodeURIComponent(message)
-      });
-      var reader = response.body.getReader();
-      var decoder = new TextDecoder('utf-8');
-      reader.read().then(function processResult(result) {
-        if (result.done) return;
-        let token = decoder.decode(result.value);
-        if (token.endsWith('.') || token.endsWith('!') || token.endsWith('?')) {
-          document.getElementById("result").innerHTML += token + "<br>";
-        } else {
-          document.getElementById("result").innerHTML += token + ' ';
+      try {
+        const response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'message=' + encodeURIComponent(message)
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
         }
-        return reader.read().then(processResult);
-      });
-      messageInput.value = '';
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        reader.read().then(function processResult(result) {
+          if (result.done) return;
+          let token = decoder.decode(result.value);
+          document.getElementById("result").innerHTML += token.trim() + "<br>";
+          return reader.read().then(processResult);
+        });
+        messageInput.value = '';
+        messageInput.focus();
+      } catch (error) {
+        console.error('Error:', error);
+        displayErrorMessage("Error sending message. Please try again later.");
+      }
     }
 
     function toggleDarkMode() {
-      var body = document.body;
-      var chatContainer = document.querySelector(".chat-container");
-      var darkModeSlider = document.getElementById("dark-mode");
+      const body = document.body;
+      const chatContainer = document.querySelector(".chat-container");
+      const darkModeSlider = document.getElementById("dark-mode");
 
       if (darkModeSlider.value === "1") {
         body.classList.add("dark-mode");
@@ -241,6 +251,20 @@
         body.classList.remove("dark-mode");
         chatContainer.classList.remove("dark-mode");
       }
+    }
+
+    function focusInput() {
+      document.getElementById("message").focus();
+    }
+
+    function displayErrorMessage(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.classList.add('error-message');
+      errorDiv.textContent = message;
+      document.getElementById("result").appendChild(errorDiv);
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 3000);
     }
   </script>
 </body>
