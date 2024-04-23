@@ -41,7 +41,7 @@ async def home():
     return RedirectResponse("/docs")
 
 
-@app.get("/chatbot",description=" Talk to chatbot")
+@app.get("/chatbot",description="Provides a simple web interface to interact with the chatbot")
 async def chat(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
@@ -336,7 +336,7 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
         return {"error": str(e)}
     
 
-@app.post("/stream_chat",description="This route provide the data from LLM in the streaming response.")
+@app.post("/stream_chat",description="This endpoint streams responses from the language model based on the user's input message.")
 async def stream_chat(message: str = Form(...)):
     generator = chatbot_send_message(message)
     return StreamingResponse(generator, media_type="text/event-stream")

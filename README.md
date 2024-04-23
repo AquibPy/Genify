@@ -83,6 +83,16 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Route:** `/summarize_audio`
 - **Description:** Endpoint to summarize an uploaded audio file using gemini-1.5-pro-latest.
 
+### 14. Chat Streaming
+
+- **Route:** `/stream_chat`
+- **Description:** This endpoint streams responses from the language model based on the user's input message.
+
+### 15. ChatBot
+
+- **Route:** `/chatbot`
+- **Description:** Provides a simple web interface to interact with the chatbot.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
