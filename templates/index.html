@@ -74,7 +74,7 @@
     <script>
       async function sendMessage() {
         var message = document.getElementById("message").value;
-        var response = await fetch('http://localhost:8000/stream_chat', {
+        var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
