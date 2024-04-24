@@ -20,7 +20,7 @@
       border-radius: 15px;
       background-color: #f9f9f9;
       padding: 20px;
-      max-width: 500px;
+      max-width: 500px; /* Adjust max-width as needed */
       width: 90%;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -230,6 +230,13 @@
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
+    }
+
+    /* Adjustments for larger screens */
+    @media (min-width: 768px) {
+      .chat-container {
+        max-width: 700px; /* Adjust max-width for larger screens */
+      }
     }
   </style>
 </head>
