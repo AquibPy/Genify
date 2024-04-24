@@ -183,31 +183,66 @@
 
     /* Message bubbles */
     .message-bubble {
-    max-width: 70%;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 20px;
-    word-wrap: break-word; /* Added to ensure long lines wrap within the bubble */
-    white-space: pre-wrap; /* Added to preserve line breaks in preformatted text */
+      max-width: 70%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 20px;
+      word-wrap: break-word; /* Added to ensure long lines wrap within the bubble */
+      white-space: pre-wrap; /* Added to preserve line breaks in preformatted text */
     }
 
     .user-message-bubble {
-    background-color: #007bff;
-    color: white;
-    align-self: flex-end;
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
     }
 
     .bot-message-bubble {
-    background-color: #f2f2f2;
-    color: black;
-    align-self: flex-start;
+      background-color: #f2f2f2;
+      color: black;
+      align-self: flex-start;
+    }
+
+    /* Style for message content */
+    .message-content {
+      margin-bottom: 5px;
+    }
+
+    /* Style for message timestamp */
+    .message-timestamp {
+      font-size: 12px;
+      color: #888;
     }
 
     /* Style for preformatted code blocks */
     .bot-message-bubble pre,
     .user-message-bubble pre {
-    margin: 0; /* Remove default margins */
-    white-space: pre-wrap; /* Preserve line breaks */
+      margin: 0; /* Remove default margins */
+      white-space: pre-wrap; /* Preserve line breaks */
+    }
+
+    /* Enhancements for dark mode */
+    body.dark-mode .message-bubble {
+      background-color: #555;
+      color: #fff;
+    }
+
+    body.dark-mode .user-message-bubble {
+      background-color: #007bff;
+      color: white;
+    }
+
+    body.dark-mode .bot-message-bubble {
+      background-color: #666;
+      color: white;
+    }
+
+    /* Background styles */
+    body {
+      background-image: url('https://assets.codepen.io/1538476/patrick-tomasso-EjF_dLS-9C8-unsplash.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
     }
   </style>
 </head>
@@ -238,10 +273,19 @@
         return;
     }
 
+    var timestamp = getCurrentDateTime(); // Get current date and time
+
     // Create a new message bubble for the user's message
     var userMessageBubble = document.createElement('div');
     userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
-    userMessageBubble.textContent = message;
+    var userMessageContent = document.createElement('div');
+    userMessageContent.classList.add('message-content');
+    userMessageContent.textContent = message;
+    var userMessageTimestamp = document.createElement('div');
+    userMessageTimestamp.classList.add('message-timestamp');
+    userMessageTimestamp.textContent = timestamp;
+    userMessageBubble.appendChild(userMessageContent);
+    userMessageBubble.appendChild(userMessageTimestamp);
     document.getElementById("result").appendChild(userMessageBubble);
 
     var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
@@ -283,29 +327,44 @@
         console.error('Error reading response stream:', error);
     });
     messageInput.value = '';
-}
-    
-    function toggleDarkMode() {
-      var body = document.body;
-      var chatContainer = document.querySelector(".chat-container");
-      var darkModeSlider = document.getElementById("dark-mode");
-
-      if (darkModeSlider.value === "1") {
-        body.classList.add("dark-mode");
-        chatContainer.classList.add("dark-mode");
-      } else {
-        body.classList.remove("dark-mode");
-        chatContainer.classList.remove("dark-mode");
-      }
     }
+
+    function getCurrentDateTime() {
+        var now = new Date();
+        var date = now.toLocaleDateString();
+        var time = now.toLocaleTimeString();
+        return date + ' ' + time;
+    }
+
+    function toggleDarkMode() {
+        var body = document.body;
+        var chatContainer = document.querySelector(".chat-container");
+        var darkModeSlider = document.getElementById("dark-mode");
+        var messageTimestamps = document.querySelectorAll('.message-timestamp');
+
+        if (darkModeSlider.value === "1") {
+            body.classList.add("dark-mode");
+            chatContainer.classList.add("dark-mode");
+            messageTimestamps.forEach(function (timestamp) {
+                timestamp.style.color = '#fff'; // White text for dark mode
+            });
+        } else {
+            body.classList.remove("dark-mode");
+            chatContainer.classList.remove("dark-mode");
+            messageTimestamps.forEach(function (timestamp) {
+                timestamp.style.color = '#000'; // Black text for light mode
+            });
+        }
+    }
+
     function displayErrorMessage(message) {
-      const errorDiv = document.createElement('div');
-      errorDiv.classList.add('error-message');
-      errorDiv.textContent = message;
-      document.getElementById("result").appendChild(errorDiv);
-      setTimeout(() => {
-        errorDiv.remove();
-      }, 3000);
+        const errorDiv = document.createElement('div');
+        errorDiv.classList.add('error-message');
+        errorDiv.textContent = message;
+        document.getElementById("result").appendChild(errorDiv);
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 3000);
     }
   </script>
 </body>
