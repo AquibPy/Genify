@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/3.0.2/marked.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -220,60 +221,60 @@
   
   <script>
     async function sendMessage() {
-  var messageInput = document.getElementById("message");
-  var message = messageInput.value.trim();
+      var messageInput = document.getElementById("message");
+      var message = messageInput.value.trim();
 
-  if (!message) {
-    displayErrorMessage("Please enter a message.");
-    return;
-  }
-
-  // Create a new message bubble for the user's message
-  var userMessageBubble = document.createElement('div');
-  userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
-  userMessageBubble.textContent = message;
-  document.getElementById("result").appendChild(userMessageBubble);
-
-  var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: 'message=' + encodeURIComponent(message)
-  });
-  var reader = response.body.getReader();
-  var decoder = new TextDecoder('utf-8');
-  var botMessageBubble = document.createElement('div');
-  botMessageBubble.classList.add('bot-message-bubble', 'message-bubble'); // Create a single bubble for bot's response
-  document.getElementById("result").appendChild(botMessageBubble); // Append the bot's message bubble to the result container
-
-  var botResponse = ''; // Initialize botResponse variable
-
-  async function readStream() {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
+      if (!message) {
+        displayErrorMessage("Please enter a message.");
+        return;
       }
-      const chunk = decoder.decode(value, { stream: true });
-      botResponse += chunk; // Append the current chunk to the bot response
-      botMessageBubble.textContent = botResponse; // Update the bot message bubble with the current response
-      var chatContainer = document.getElementById("result");
-      chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom of the chat container
+
+      // Create a new message bubble for the user's message
+      var userMessageBubble = document.createElement('div');
+      userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
+      userMessageBubble.textContent = message;
+      document.getElementById("result").appendChild(userMessageBubble);
+
+      var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'message=' + encodeURIComponent(message)
+      });
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder('utf-8');
+      var botMessageBubble = document.createElement('div');
+      botMessageBubble.classList.add('bot-message-bubble', 'message-bubble'); // Create a single bubble for bot's response
+      document.getElementById("result").appendChild(botMessageBubble); // Append the bot's message bubble to the result container
+
+      var botResponse = ''; // Initialize botResponse variable
+
+      async function readStream() {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          const chunk = decoder.decode(value, { stream: true });
+          botResponse += chunk; // Append the current chunk to the bot response
+          botMessageBubble.innerHTML = marked(botResponse); // Parse Markdown and update the bot message bubble with the current response
+          var chatContainer = document.getElementById("result");
+          chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom of the chat container
+        }
+      }
+
+      readStream().catch(error => {
+        console.error('Error reading response stream:', error);
+      });
+      messageInput.value = '';
     }
-  }
-
-  readStream().catch(error => {
-    console.error('Error reading response stream:', error);
-  });
-  messageInput.value = '';
-}
-
+    
     function toggleDarkMode() {
       var body = document.body;
       var chatContainer = document.querySelector(".chat-container");
       var darkModeSlider = document.getElementById("dark-mode");
-  
+
       if (darkModeSlider.value === "1") {
         body.classList.add("dark-mode");
         chatContainer.classList.add("dark-mode");
