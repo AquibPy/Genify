@@ -92,6 +92,7 @@ Generative AI, powered by advanced machine learning models, enables the creation
 
 - **Route:** `/chatbot`
 - **Description:** Provides a simple web interface to interact with the chatbot.
+- **Try ChatBot:**  [Talk to LLAMA 3](https://llm-pgc4.onrender.com/chatbot)
 
 ## Usage
 

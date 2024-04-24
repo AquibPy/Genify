@@ -40,10 +40,10 @@
     #result {
       height: 300px;
       overflow-y: auto;
-      border-radius: 10px;
-      border: 1px solid #ccc;
       padding: 10px;
       margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
     #message-container {
@@ -179,6 +179,26 @@
       cursor: pointer;
       border-radius: 50%;
     }
+
+    /* Message bubbles */
+    .message-bubble {
+      max-width: 70%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 20px;
+    }
+
+    .user-message-bubble {
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .bot-message-bubble {
+      background-color: #f2f2f2;
+      color: black;
+      align-self: flex-start;
+    }
   </style>
 </head>
 <body>
@@ -200,41 +220,60 @@
   
   <script>
     async function sendMessage() {
-      var messageInput = document.getElementById("message");
-      var message = messageInput.value.trim();
-  
-      if (!message) {
-        displayErrorMessage("Please enter a message.");
-        return;
+  var messageInput = document.getElementById("message");
+  var message = messageInput.value.trim();
+
+  if (!message) {
+    displayErrorMessage("Please enter a message.");
+    return;
+  }
+
+  // Create a new message bubble for the user's message
+  var userMessageBubble = document.createElement('div');
+  userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
+  userMessageBubble.textContent = message;
+  document.getElementById("result").appendChild(userMessageBubble);
+
+  var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: 'message=' + encodeURIComponent(message)
+  });
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder('utf-8');
+  var botMessageBubble = document.createElement('div');
+  botMessageBubble.classList.add('bot-message-bubble', 'message-bubble'); // Create a single bubble for bot's response
+  document.getElementById("result").appendChild(botMessageBubble); // Append the bot's message bubble to the result container
+
+  var botResponse = ''; // Initialize botResponse variable
+
+  async function readStream() {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
       }
-  
-      var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'message=' + encodeURIComponent(message)
-      });
-      var reader = response.body.getReader();
-      var decoder = new TextDecoder('utf-8');
-      reader.read().then(function processResult(result) {
-        if (result.done) return;
-        let token = decoder.decode(result.value);
-        if (token.endsWith('.') || token.endsWith('!') || token.endsWith('?')) {
-          document.getElementById("result").innerHTML += token + "<br>";
-        } else {
-          document.getElementById("result").innerHTML += token + ' ';
-        }
-        return reader.read().then(processResult);
-      });
-      messageInput.value = '';
+      const chunk = decoder.decode(value, { stream: true });
+      botResponse += chunk; // Append the current chunk to the bot response
+      botMessageBubble.textContent = botResponse; // Update the bot message bubble with the current response
+      var chatContainer = document.getElementById("result");
+      chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom of the chat container
     }
+  }
+
+  readStream().catch(error => {
+    console.error('Error reading response stream:', error);
+  });
+  messageInput.value = '';
+}
 
     function toggleDarkMode() {
       var body = document.body;
       var chatContainer = document.querySelector(".chat-container");
       var darkModeSlider = document.getElementById("dark-mode");
-
+  
       if (darkModeSlider.value === "1") {
         body.classList.add("dark-mode");
         chatContainer.classList.add("dark-mode");
