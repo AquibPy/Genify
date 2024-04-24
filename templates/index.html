@@ -89,18 +89,16 @@
     h1 {
       font-size: 32px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
       color: #007bff;
-      animation: neon 1.5s infinite alternate;
+      animation: pulse 1s infinite alternate;
     }
 
-    @keyframes neon {
+    @keyframes pulse {
       from {
-        text-shadow: 0 0 5px #007bff, 0 0 10px #007bff, 0 0 20px #007bff, 0 0 30px #007bff, 0 0 40px #007bff, 0 0 55px #007bff, 0 0 75px #007bff;
+        transform: scale(1);
       }
       to {
-        text-shadow: 0 0 10px #007bff, 0 0 20px #007bff, 0 0 30px #007bff, 0 0 40px #007bff, 0 0 55px #007bff, 0 0 75px #007bff, 0 0 100px #007bff;
+        transform: scale(1.1);
       }
     }
 
@@ -201,17 +199,6 @@
       background-color: #f2f2f2;
       color: black;
       align-self: flex-start;
-    }
-
-    /* Style for message content */
-    .message-content {
-      margin-bottom: 5px;
-    }
-
-    /* Style for message timestamp */
-    .message-timestamp {
-      font-size: 12px;
-      color: #888;
     }
 
     /* Style for preformatted code blocks */
@@ -327,45 +314,45 @@
         console.error('Error reading response stream:', error);
     });
     messageInput.value = '';
-    }
+}
 
-    function getCurrentDateTime() {
-        var now = new Date();
-        var date = now.toLocaleDateString();
-        var time = now.toLocaleTimeString();
-        return date + ' ' + time;
-    }
+function getCurrentDateTime() {
+    var now = new Date();
+    var date = now.toLocaleDateString();
+    var time = now.toLocaleTimeString();
+    return date + ' ' + time;
+}
 
-    function toggleDarkMode() {
-        var body = document.body;
-        var chatContainer = document.querySelector(".chat-container");
-        var darkModeSlider = document.getElementById("dark-mode");
-        var messageTimestamps = document.querySelectorAll('.message-timestamp');
+function toggleDarkMode() {
+    var body = document.body;
+    var chatContainer = document.querySelector(".chat-container");
+    var darkModeSlider = document.getElementById("dark-mode");
+    var messageTimestamps = document.querySelectorAll('.message-timestamp');
 
-        if (darkModeSlider.value === "1") {
-            body.classList.add("dark-mode");
-            chatContainer.classList.add("dark-mode");
-            messageTimestamps.forEach(function (timestamp) {
-                timestamp.style.color = '#fff'; // White text for dark mode
-            });
-        } else {
-            body.classList.remove("dark-mode");
-            chatContainer.classList.remove("dark-mode");
-            messageTimestamps.forEach(function (timestamp) {
-                timestamp.style.color = '#000'; // Black text for light mode
-            });
-        }
+    if (darkModeSlider.value === "1") {
+        body.classList.add("dark-mode");
+        chatContainer.classList.add("dark-mode");
+        messageTimestamps.forEach(function (timestamp) {
+            timestamp.style.color = '#fff'; // White text for dark mode
+        });
+    } else {
+        body.classList.remove("dark-mode");
+        chatContainer.classList.remove("dark-mode");
+        messageTimestamps.forEach(function (timestamp) {
+            timestamp.style.color = '#000'; // Black text for light mode
+        });
     }
+}
 
-    function displayErrorMessage(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.classList.add('error-message');
-        errorDiv.textContent = message;
-        document.getElementById("result").appendChild(errorDiv);
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 3000);
-    }
+function displayErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.classList.add('error-message');
+    errorDiv.textContent = message;
+    document.getElementById("result").appendChild(errorDiv);
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 3000);
+}
   </script>
 </body>
 </html>
