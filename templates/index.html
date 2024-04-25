@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with LLAMA 3 🦙🦙🦙</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/3.0.2/marked.min.js"></script>
   <style>
     body {
@@ -258,24 +260,22 @@
 
     /* Notification styles */
     .notification {
-      position: fixed;
-      top: 10px;
+      position: absolute;
+      bottom: 10px;
       right: 10px;
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px 20px;
+      padding: 10px;
+      background-color: rgba(0, 123, 255, 0.7);
+      color: white;
       border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-      animation: slideIn 0.5s ease forwards, fadeOut 0.5s 1.5s ease forwards;
-      z-index: 9999;
+      animation: slideIn 0.5s, fadeOut 1s 1.5s forwards;
     }
 
     @keyframes slideIn {
       from {
-        transform: translateX(100%);
+        transform: translateY(100%);
       }
       to {
-        transform: translateX(0);
+        transform: translateY(0);
       }
     }
 
@@ -305,6 +305,7 @@
     <footer>
       <p>© Made with ❤️ by <a href='https://github.com/AquibPy' target='_blank'>Mohd Aquib</a> </p>
     </footer>
+    <div id="notification"></div> <!-- Notification container -->
   </div>
   
   <script>
@@ -348,9 +349,8 @@
         botMessageBubble.classList.add('bot-response');
         botResponseContainer.appendChild(botMessageBubble);
         
-        // Add a copy button with copy symbol to each bot message bubble
         var copyButton = document.createElement('button');
-        copyButton.innerHTML = "&#128203;"; // Unicode for copy symbol
+        copyButton.innerHTML = "&#128203;";
         copyButton.addEventListener('click', function() {
             copyToClipboard(botResponse);
             showNotification('Copied!');
@@ -420,12 +420,12 @@
     }
 
     function copyToClipboard(text) {
-        const el = document.createElement('textarea');
-        el.value = text;
-        document.body.appendChild(el);
-        el.select();
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
         document.execCommand('copy');
-        document.body.removeChild(el);
+        document.body.removeChild(textArea);
     }
 
     // Function to display a notification
@@ -433,7 +433,7 @@
         const notification = document.createElement('div');
         notification.classList.add('notification');
         notification.textContent = message;
-        document.body.appendChild(notification);
+        document.getElementById("notification").appendChild(notification);
         setTimeout(() => {
             notification.remove();
         }, 2000); // Remove notification after 2 seconds
