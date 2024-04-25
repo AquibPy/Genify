@@ -14,7 +14,7 @@
       min-height: 100vh;
       background-color: #f2f2f2;
       transition: background-color 0.3s ease;
-      position: relative; /* Make body position relative */
+      position: relative;
     }
 
     .background-animation {
@@ -46,7 +46,7 @@
       border-radius: 15px;
       background-color: #f9f9f9;
       padding: 20px;
-      max-width: 500px; /* Adjust max-width as needed */
+      max-width: 500px;
       width: 90%;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -86,19 +86,21 @@
       margin-right: 10px;
     }
 
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 15px;
-      background-color: #007bff;
-      color: white;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .send-button {
+      padding: 12px 24px;
+      border: 2px solid #007bff;
+      border-radius: 30px;
+      background-color: transparent;
+      color: #007bff;
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
     }
 
-    button:hover {
-      background-color: #0056b3;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    .send-button:hover {
+      background-color: #007bff;
+      color: #fff;
     }
 
     #mode-switch {
@@ -111,7 +113,6 @@
       margin-right: 5px;
     }
 
-    /* Effect for heading */
     h1 {
       font-size: 32px;
       text-align: center;
@@ -155,7 +156,6 @@
       }
     }
 
-    /* Dark mode styles */
     body.dark-mode {
       background-color: #333;
       color: #fff;
@@ -175,7 +175,6 @@
       border-color: #666;
     }
 
-    /* Slider styles */
     .slider {
       -webkit-appearance: none;
       width: 60px;
@@ -205,14 +204,13 @@
       border-radius: 50%;
     }
 
-    /* Message bubbles */
     .message-bubble {
       max-width: 70%;
       margin-bottom: 10px;
       padding: 10px;
       border-radius: 20px;
-      word-wrap: break-word; /* Added to ensure long lines wrap within the bubble */
-      white-space: pre-wrap; /* Added to preserve line breaks in preformatted text */
+      word-wrap: break-word;
+      white-space: pre-wrap;
     }
 
     .user-message-bubble {
@@ -227,14 +225,12 @@
       align-self: flex-start;
     }
 
-    /* Style for preformatted code blocks */
     .bot-message-bubble pre,
     .user-message-bubble pre {
-      margin: 0; /* Remove default margins */
-      white-space: pre-wrap; /* Preserve line breaks */
+      margin: 0;
+      white-space: pre-wrap;
     }
 
-    /* Enhancements for dark mode */
     body.dark-mode .message-bubble {
       background-color: #555;
       color: #fff;
@@ -250,27 +246,57 @@
       color: white;
     }
 
-    /* Background styles */
     body {
-      background-color: transparent; /* Make body background transparent */
+      background-color: transparent;
     }
 
-    /* Adjustments for larger screens */
     @media (min-width: 768px) {
       .chat-container {
-        max-width: 700px; /* Adjust max-width for larger screens */
+        max-width: 700px;
+      }
+    }
+
+    /* Notification styles */
+    .notification {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.5s ease forwards, fadeOut 0.5s 1.5s ease forwards;
+      z-index: 9999;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
       }
     }
   </style>
 </head>
 <body>
-  <div class="background-animation"></div> <!-- Background animation -->
+  <div class="background-animation"></div>
   <div class="chat-container">
     <h1>Chat with LLAMA 3 🦙🦙🦙</h1>
     <div id="result"></div>
     <div id="message-container">
       <input type="text" id="message" placeholder="Type your message here" />
-      <button onclick="sendMessage()">Send Message</button>
+      <button onclick="sendMessage()" class="send-button">Send Message</button>
     </div>
     <div id="mode-switch">
       <label id="dark-mode-label" for="dark-mode">Dark Mode</label>
@@ -283,107 +309,135 @@
   
   <script>
     async function sendMessage() {
-    var messageInput = document.getElementById("message");
-    var message = messageInput.value.trim();
+        var messageInput = document.getElementById("message");
+        var message = messageInput.value.trim();
 
-    if (!message) {
-        displayErrorMessage("Please enter a message.");
-        return;
+        if (!message) {
+            displayErrorMessage("Please enter a message.");
+            return;
+        }
+
+        var timestamp = getCurrentDateTime();
+
+        var userMessageBubble = document.createElement('div');
+        userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
+        var userMessageContent = document.createElement('div');
+        userMessageContent.classList.add('message-content');
+        userMessageContent.textContent = message;
+        var userMessageTimestamp = document.createElement('div');
+        userMessageTimestamp.classList.add('message-timestamp');
+        userMessageTimestamp.textContent = timestamp;
+        userMessageBubble.appendChild(userMessageContent);
+        userMessageBubble.appendChild(userMessageTimestamp);
+        document.getElementById("result").appendChild(userMessageBubble);
+
+        var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'message=' + encodeURIComponent(message)
+        });
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder('utf-8');
+
+        var botResponseContainer = document.createElement('div');
+        botResponseContainer.classList.add('bot-message-bubble', 'message-bubble');
+
+        var botMessageBubble = document.createElement('div');
+        botMessageBubble.classList.add('bot-response');
+        botResponseContainer.appendChild(botMessageBubble);
+        
+        // Add a copy button with copy symbol to each bot message bubble
+        var copyButton = document.createElement('button');
+        copyButton.innerHTML = "&#128203;"; // Unicode for copy symbol
+        copyButton.addEventListener('click', function() {
+            copyToClipboard(botResponse);
+            showNotification('Copied!');
+        });
+        botResponseContainer.appendChild(copyButton);
+
+        document.getElementById("result").appendChild(botResponseContainer);
+
+        var botResponse = '';
+
+        async function readStream() {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                const chunk = decoder.decode(value, { stream: true });
+                botResponse += chunk;
+                botMessageBubble.innerHTML = marked(botResponse);
+                var chatContainer = document.getElementById("result");
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        readStream().catch(error => {
+            console.error('Error reading response stream:', error);
+        });
+        messageInput.value = '';
     }
 
-    var timestamp = getCurrentDateTime(); // Get current date and time
+    function getCurrentDateTime() {
+        var now = new Date();
+        var date = now.toLocaleDateString();
+        var time = now.toLocaleTimeString();
+        return date + ' ' + time;
+    }
 
-    // Create a new message bubble for the user's message
-    var userMessageBubble = document.createElement('div');
-    userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
-    var userMessageContent = document.createElement('div');
-    userMessageContent.classList.add('message-content');
-    userMessageContent.textContent = message;
-    var userMessageTimestamp = document.createElement('div');
-    userMessageTimestamp.classList.add('message-timestamp');
-    userMessageTimestamp.textContent = timestamp;
-    userMessageBubble.appendChild(userMessageContent);
-    userMessageBubble.appendChild(userMessageTimestamp);
-    document.getElementById("result").appendChild(userMessageBubble);
+    function toggleDarkMode() {
+        var body = document.body;
+        var chatContainer = document.querySelector(".chat-container");
+        var darkModeSlider = document.getElementById("dark-mode");
+        var messageTimestamps = document.querySelectorAll('.message-timestamp');
 
-    var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'message=' + encodeURIComponent(message)
-    });
-    var reader = response.body.getReader();
-    var decoder = new TextDecoder('utf-8');
-
-    // Create a container for the bot's response
-    var botResponseContainer = document.createElement('div');
-    botResponseContainer.classList.add('bot-message-bubble', 'message-bubble');
-
-    var botMessageBubble = document.createElement('div');
-    botMessageBubble.classList.add('bot-response'); // Add a class to style markdown content
-    botResponseContainer.appendChild(botMessageBubble); // Append the bot's message bubble to the container
-    document.getElementById("result").appendChild(botResponseContainer); // Append the container to the result container
-
-    var botResponse = ''; // Initialize botResponse variable
-
-    async function readStream() {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
-            }
-            const chunk = decoder.decode(value, { stream: true });
-            botResponse += chunk; // Append the current chunk to the bot response
-            botMessageBubble.innerHTML = marked(botResponse); // Parse Markdown and update the bot message bubble with the current response
-            var chatContainer = document.getElementById("result");
-            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom of the chat container
+        if (darkModeSlider.value === "1") {
+            body.classList.add("dark-mode");
+            chatContainer.classList.add("dark-mode");
+            messageTimestamps.forEach(function (timestamp) {
+                timestamp.style.color = '#fff';
+            });
+        } else {
+            body.classList.remove("dark-mode");
+            chatContainer.classList.remove("dark-mode");
+            messageTimestamps.forEach(function (timestamp) {
+                timestamp.style.color = '#000';
+            });
         }
     }
 
-    readStream().catch(error => {
-        console.error('Error reading response stream:', error);
-    });
-    messageInput.value = '';
-}
-
-function getCurrentDateTime() {
-    var now = new Date();
-    var date = now.toLocaleDateString();
-    var time = now.toLocaleTimeString();
-    return date + ' ' + time;
-}
-
-function toggleDarkMode() {
-    var body = document.body;
-    var chatContainer = document.querySelector(".chat-container");
-    var darkModeSlider = document.getElementById("dark-mode");
-    var messageTimestamps = document.querySelectorAll('.message-timestamp');
-
-    if (darkModeSlider.value === "1") {
-        body.classList.add("dark-mode");
-        chatContainer.classList.add("dark-mode");
-        messageTimestamps.forEach(function (timestamp) {
-            timestamp.style.color = '#fff'; // White text for dark mode
-        });
-    } else {
-        body.classList.remove("dark-mode");
-        chatContainer.classList.remove("dark-mode");
-        messageTimestamps.forEach(function (timestamp) {
-            timestamp.style.color = '#000'; // Black text for light mode
-        });
+    function displayErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.classList.add('error-message');
+        errorDiv.textContent = message;
+        document.getElementById("result").appendChild(errorDiv);
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 3000);
     }
-}
 
-function displayErrorMessage(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.classList.add('error-message');
-    errorDiv.textContent = message;
-    document.getElementById("result").appendChild(errorDiv);
-    setTimeout(() => {
-        errorDiv.remove();
-    }, 3000);
-}
+    function copyToClipboard(text) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    }
+
+    // Function to display a notification
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.classList.add('notification');
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            notification.remove();
+        }, 2000); // Remove notification after 2 seconds
+    }
   </script>
 </body>
 </html>
