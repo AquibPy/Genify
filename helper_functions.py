@@ -265,6 +265,14 @@ async def chatbot_send_message(content: str) -> AsyncIterable[str]:
 
     await task
 
+def extraxt_pdf_text(uploaded_file):
+    reader=PdfReader(uploaded_file)
+    text=""
+    for page in range(len(reader.pages)):
+        page=reader.pages[page]
+        text+=str(page.extract_text())
+    return text
+
 if __name__ == "__main__":
     create_vector_db()
     chain = get_qa_chain()

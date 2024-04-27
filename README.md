@@ -94,6 +94,14 @@ Generative AI, powered by advanced machine learning models, enables the creation
 - **Description:** Provides a simple web interface to interact with the chatbot.
 - **Try ChatBot:**  [Talk to LLAMA 3](https://llm-pgc4.onrender.com/chatbot)
 
+### 16. Resume Evaluator
+
+- **Route:** `/smart_ats`
+- **Description:** The Resume Evaluator endpoint allows users to evaluate resumes against provided job descriptions. It leverages a Generative AI model to analyze resume content and generate insights such as job description match
+percentage, missing keywords, and profile summary.
+- **Input:** Users need to upload a resume file and provide a job description as text.
+- **Output:** The endpoint provides insights in JSON format, including job description match.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
@@ -107,11 +115,13 @@ Each endpoint accepts specific parameters as described in the respective endpoin
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/AquibPy/LLM-use-cases-API.git
    ```
 
 2. Install dependencies:
+
     ```python
     pip install -r requirements.txt
     ```

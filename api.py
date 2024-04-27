@@ -11,7 +11,7 @@ from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EM
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio,chatbot_send_message
+    summarize_audio,chatbot_send_message,extraxt_pdf_text
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -305,7 +305,7 @@ async def groq_text_summary(input_text: str = Form(...)):
     
 @app.post("/RAG_PDF_Groq",description="The endpoint uses the pdf and give the answer based on the prompt provided using groq\
           In model input default is mixtral-8x7b-32768 but you can choose llama2-70b-4096, gemma-7b-it, llama3-70b-8192 and llama3-8b-8192.")
-async def talk_pd_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
+async def talk_pdf_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
                        model: Optional[str] = Form('llama2-70b-4096')):
     try:
         rag_chain = groq_pdf(pdf.file,model)
@@ -345,3 +345,40 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
 async def stream_chat(message: str = Form("What is RLHF in LLM?")):
     generator = chatbot_send_message(message)
     return StreamingResponse(generator, media_type="text/event-stream")
+
+@app.post("/smart_ats",description="""This endpoint is developed using the powerful 
+          Gemini Pro 1.5 model to streamline the hiring process by analyzing job descriptions and resumes. 
+          It provides valuable insights such as job description match, 
+          missing keywords, and profile summary""")
+async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...)):
+    try:
+        text = extraxt_pdf_text(resume_pdf.file)
+        model = genai.GenerativeModel(GEMINI_PRO_1_5)
+        ats_prompt=f"""
+                Hey Act Like a skilled or very experience ATS(Application Tracking System)
+                with a deep understanding of tech field,software engineering,data science ,data analyst
+                and big data engineer. Your task is to evaluate the resume based on the given job description.
+                You must consider the job market is very competitive and you should provide 
+                best assistance for improving thr resumes. Assign the percentage Matching based 
+                on job description and
+                the missing keywords with high accuracy
+                resume:{text}
+                job description:{job_description}
+
+                I want the response as per below structure
+                {{"Job Description Match": "%", "MissingKeywords": [], "Profile Summary": ""}}
+                """
+        response=model.generate_content(ats_prompt)
+        db = MongoDB()
+        payload = {
+            "endpoint" : "/smart_ats",
+            "resume": text,
+            "job description" : job_description,
+            "ATS Output" : response.text
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=response.text)
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
