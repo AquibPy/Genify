@@ -342,8 +342,8 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
     
 
 @app.post("/stream_chat",description="This endpoint streams responses from the language model based on the user's input message.")
-async def stream_chat(message: str = Form("What is RLHF in LLM?")):
-    generator = chatbot_send_message(message)
+async def stream_chat(message: str = Form("What is RLHF in LLM?"),llm: str = Form("llama3-70b-8192")):
+    generator = chatbot_send_message(message,model=llm)
     return StreamingResponse(generator, media_type="text/event-stream")
 
 @app.post("/smart_ats",description="""This endpoint is developed using the powerful 

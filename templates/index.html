@@ -340,7 +340,8 @@
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: 'message=' + encodeURIComponent(message)
+            body: 'message=' + encodeURIComponent(message),
+                  'llm': 'llama3-70b-8192'
         });
         var reader = response.body.getReader();
         var decoder = new TextDecoder('utf-8');

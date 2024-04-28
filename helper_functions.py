@@ -240,12 +240,12 @@ async def summarize_audio(audio_file):
     return response.text
 
 
-async def chatbot_send_message(content: str) -> AsyncIterable[str]:
+async def chatbot_send_message(content: str,model: str) -> AsyncIterable[str]:
     callback = AsyncIteratorCallbackHandler()
     model = ChatGroq(
         temperature=0, 
         groq_api_key=os.environ['GROQ_API_KEY'], 
-        model_name="llama3-70b-8192",
+        model_name=model,
         streaming=True,
         verbose=True,
         callbacks=[callback],
