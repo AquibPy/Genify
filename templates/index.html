@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat with LLAMA 3 🦙🦙🦙</title>
+  <title>Chat with LLMs</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/3.0.2/marked.min.js"></script>
   <style>
     body {
@@ -302,145 +302,168 @@
       <label id="dark-mode-label" for="dark-mode">Dark Mode</label>
       <input type="range" min="0" max="1" value="0" class="slider" id="dark-mode" onchange="toggleDarkMode()">
     </div>
+    <div>
+      <label for="model-select">Select Model:</label>
+      <select id="model-select" onchange="updateSelectedModel()">
+        <option value="llama3-70b-8192">LLAMA 3-70b 🦙🦙🦙</option>
+        <option value="llama3-8b-8192">LLAMA 3-8b 🦙🦙🦙</option>
+        <option value="mixtral-8x7b-32768">MIXTRAL 8x7b</option>
+        <!-- <option value="llama2-70b-4096">LLAMA 2-70b 🦙🦙</option> -->
+        <option value="gemma-7b-it">GEMMA 7b-it</option>
+      </select>
+    </div>
     <footer>
       <p>© Made with ❤️ by <a href='https://www.linkedin.com/in/aquibpy/' target='_blank'>Mohd Aquib</a> </p>
       <p>Follow me on  <a href='https://github.com/AquibPy' target='_blank'> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
       </svg></a></p>
     </footer>
-    <div id="notification"></div> <!-- Notification container -->
+    <div id="notification"></div>
   </div>
   
   <script>
     async function sendMessage() {
-        var messageInput = document.getElementById("message");
-        var message = messageInput.value.trim();
+      var messageInput = document.getElementById("message");
+      var message = messageInput.value.trim();
 
-        if (!message) {
-            displayErrorMessage("Please enter a message.");
-            return;
+      if (!message) {
+        displayErrorMessage("Please enter a message.");
+        return;
+      }
+
+      var timestamp = getCurrentDateTime();
+
+      var userMessageBubble = document.createElement('div');
+      userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
+      var userMessageContent = document.createElement('div');
+      userMessageContent.classList.add('message-content');
+      userMessageContent.textContent = message;
+      var userMessageTimestamp = document.createElement('div');
+      userMessageTimestamp.classList.add('message-timestamp');
+      userMessageTimestamp.textContent = timestamp;
+      userMessageBubble.appendChild(userMessageContent);
+      userMessageBubble.appendChild(userMessageTimestamp);
+      document.getElementById("result").appendChild(userMessageBubble);
+
+      var selectedModel = document.getElementById("model-select").value;
+
+      var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'message=' + encodeURIComponent(message) + '&llm=' + selectedModel
+      });
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder('utf-8');
+
+      var botResponseContainer = document.createElement('div');
+      botResponseContainer.classList.add('bot-message-bubble', 'message-bubble');
+
+      var botMessageBubble = document.createElement('div');
+      botMessageBubble.classList.add('bot-response');
+      botResponseContainer.appendChild(botMessageBubble);
+      
+      var copyButton = document.createElement('button');
+      copyButton.innerHTML = "&#128203;";
+      copyButton.addEventListener('click', function() {
+        copyToClipboard(botResponse);
+        showNotification('Copied!');
+      });
+      botResponseContainer.appendChild(copyButton);
+
+      document.getElementById("result").appendChild(botResponseContainer);
+
+      var botResponse = '';
+
+      async function readStream() {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          const chunk = decoder.decode(value, { stream: true });
+          botResponse += chunk;
+          botMessageBubble.innerHTML = marked(botResponse);
+          var chatContainer = document.getElementById("result");
+          chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+      }
 
-        var timestamp = getCurrentDateTime();
-
-        var userMessageBubble = document.createElement('div');
-        userMessageBubble.classList.add('user-message-bubble', 'message-bubble');
-        var userMessageContent = document.createElement('div');
-        userMessageContent.classList.add('message-content');
-        userMessageContent.textContent = message;
-        var userMessageTimestamp = document.createElement('div');
-        userMessageTimestamp.classList.add('message-timestamp');
-        userMessageTimestamp.textContent = timestamp;
-        userMessageBubble.appendChild(userMessageContent);
-        userMessageBubble.appendChild(userMessageTimestamp);
-        document.getElementById("result").appendChild(userMessageBubble);
-
-        var response = await fetch('https://llm-pgc4.onrender.com/stream_chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: 'message=' + encodeURIComponent(message),
-                  'llm': 'llama3-70b-8192'
-        });
-        var reader = response.body.getReader();
-        var decoder = new TextDecoder('utf-8');
-
-        var botResponseContainer = document.createElement('div');
-        botResponseContainer.classList.add('bot-message-bubble', 'message-bubble');
-
-        var botMessageBubble = document.createElement('div');
-        botMessageBubble.classList.add('bot-response');
-        botResponseContainer.appendChild(botMessageBubble);
-        
-        var copyButton = document.createElement('button');
-        copyButton.innerHTML = "&#128203;";
-        copyButton.addEventListener('click', function() {
-            copyToClipboard(botResponse);
-            showNotification('Copied!');
-        });
-        botResponseContainer.appendChild(copyButton);
-
-        document.getElementById("result").appendChild(botResponseContainer);
-
-        var botResponse = '';
-
-        async function readStream() {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                const chunk = decoder.decode(value, { stream: true });
-                botResponse += chunk;
-                botMessageBubble.innerHTML = marked(botResponse);
-                var chatContainer = document.getElementById("result");
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        }
-
-        readStream().catch(error => {
-            console.error('Error reading response stream:', error);
-        });
-        messageInput.value = '';
+      readStream().catch(error => {
+        console.error('Error reading response stream:', error);
+      });
+      messageInput.value = '';
     }
 
     function getCurrentDateTime() {
-        var now = new Date();
-        var date = now.toLocaleDateString();
-        var time = now.toLocaleTimeString();
-        return date + ' ' + time;
+      var now = new Date();
+      var date = now.toLocaleDateString();
+      var time = now.toLocaleTimeString();
+      return date + ' ' + time;
     }
 
     function toggleDarkMode() {
-        var body = document.body;
-        var chatContainer = document.querySelector(".chat-container");
-        var darkModeSlider = document.getElementById("dark-mode");
-        var messageTimestamps = document.querySelectorAll('.message-timestamp');
+      var body = document.body;
+      var chatContainer = document.querySelector(".chat-container");
+      var darkModeSlider = document.getElementById("dark-mode");
+      var messageTimestamps = document.querySelectorAll('.message-timestamp');
 
-        if (darkModeSlider.value === "1") {
-            body.classList.add("dark-mode");
-            chatContainer.classList.add("dark-mode");
-            messageTimestamps.forEach(function (timestamp) {
-                timestamp.style.color = '#fff';
-            });
-        } else {
-            body.classList.remove("dark-mode");
-            chatContainer.classList.remove("dark-mode");
-            messageTimestamps.forEach(function (timestamp) {
-                timestamp.style.color = '#000';
-            });
-        }
+      if (darkModeSlider.value === "1") {
+        body.classList.add("dark-mode");
+        chatContainer.classList.add("dark-mode");
+        messageTimestamps.forEach(function (timestamp) {
+          timestamp.style.color = '#fff';
+        });
+      } else {
+        body.classList.remove("dark-mode");
+        chatContainer.classList.remove("dark-mode");
+        messageTimestamps.forEach(function (timestamp) {
+          timestamp.style.color = '#000';
+        });
+      }
     }
 
     function displayErrorMessage(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.classList.add('error-message');
-        errorDiv.textContent = message;
-        document.getElementById("result").appendChild(errorDiv);
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 3000);
+      const errorDiv = document.createElement('div');
+      errorDiv.classList.add('error-message');
+      errorDiv.textContent = message;
+      document.getElementById("result").appendChild(errorDiv);
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 3000);
     }
 
     function copyToClipboard(text) {
-        var textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
+      var textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
     }
 
-    // Function to display a notification
     function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.classList.add('notification');
-        notification.textContent = message;
-        document.getElementById("notification").appendChild(notification);
-        setTimeout(() => {
-            notification.remove();
-        }, 2000); // Remove notification after 2 seconds
+      const notification = document.createElement('div');
+      notification.classList.add('notification');
+      notification.textContent = message;
+      document.getElementById("notification").appendChild(notification);
+      setTimeout(() => {
+        notification.remove();
+      }, 2000);
+    }
+
+    function updateSelectedModel() {
+      var selectedModel = document.getElementById("model-select").value;
+      var modelOptions = {
+        "llama3-70b-8192": "LLAMA 3-70b 🦙🦙🦙",
+        "llama3-8b-8192": "LLAMA 3-8b 🦙🦙🦙",
+        "mixtral-8x7b-32768": "MIXTRAL 8x7b",
+        // "llama2-70b-4096": "LLAMA 2-70b 🦙🦙",
+        "gemma-7b-it": "GEMMA 7b-it"
+      };
+      var selectedModelText = modelOptions[selectedModel];
+      document.querySelector("h1").textContent = "Chat with " + selectedModelText;
     }
   </script>
 </body>
