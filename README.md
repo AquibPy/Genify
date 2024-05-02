@@ -102,6 +102,12 @@ percentage, missing keywords, and profile summary.
 - **Input:** Users need to upload a resume file and provide a job description as text.
 - **Output:** The endpoint provides insights in JSON format, including job description match.
 
+### 17. ChatBot
+
+- **Route:** `/blog_generator_ui`
+- **Description:** Provides a simple web interface to interact with the Blog Generator.
+- **Try ChatBot:**  [Blog Generator](https://llm-pgc4.onrender.com/blog_generator_ui)
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

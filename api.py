@@ -50,6 +50,10 @@ async def home():
 async def chat(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/blog_generator_ui",description="Provides a simple web interface to interact with the Blog Generator")
+async def chat(request: Request):
+    return templates.TemplateResponse("blog_generator.html", {"request": request})
+
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
 async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
     image = image_file.file.read()
