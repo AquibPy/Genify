@@ -158,10 +158,14 @@
         .copy-btn:hover {
             background-color: #5a6268;
         }
+        @media (max-width: 800px) {
+            .container {
+                margin: 20px auto;
+            }
+        }
         @media (max-width: 600px) {
             .container {
-                padding: 20px;
-                max-width: 100%;
+                padding: 15px;
             }
             input[type="text"],
             input[type="file"],
@@ -278,7 +282,7 @@
             formData.append('job_description', jobDescription);
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/smart_ats', {
+                const response = await fetch('https://llm-pgc4.onrender.com/smart_ats', {
                     method: 'POST',
                     body: formData
                 });
