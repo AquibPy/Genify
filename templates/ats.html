@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart ATS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.css">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #c0e3e8, #92aedb);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 1s ease;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            color: #3d8ec9;
+            position: relative;
+            animation: slideInDown 1s ease;
+        }
+        h1::before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background-color: #3d8ec9;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            animation: slideInLeft 1s ease;
+        }
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #3d8ec9;
+        }
+        input[type="file"],
+        textarea {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease;
+            animation: fadeIn 1s ease;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        input[type="file"]:focus,
+        textarea:focus {
+            border-color: #3d8ec9;
+            outline: none;
+            background-color: rgba(255, 255, 255, 1);
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3d8ec9;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: slideInRight 1s ease;
+        }
+        button:hover {
+            background-color: #357bb5;
+        }
+        button i {
+            margin-right: 10px;
+        }
+        #output {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f7f7f7;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            animation: fadeIn 1s ease;
+        }
+        #output:hover {
+            transform: scale(1.02);
+        }
+        #output h2 {
+            margin-top: 0;
+            color: #3d8ec9;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        #output h2::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: #3d8ec9;
+        }
+        #output p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .loading {
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(61, 142, 201, 0.2);
+            border-left-color: #3d8ec9;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            animation: fadeIn 1s ease;
+        }
+        .btn-container button {
+            margin: 0 10px;
+        }
+        .copy-btn {
+            background-color: #6c757d;
+            transition: background-color 0.3s ease;
+        }
+        .copy-btn:hover {
+            background-color: #5a6268;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                max-width: 100%;
+            }
+            input[type="text"],
+            input[type="file"],
+            textarea {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 24px;
+            }
+            label {
+                font-size: 1rem;
+            }
+            input[type="text"],
+            input[type="file"],
+            textarea {
+                width: 250px;
+            }
+        }
+        @media (max-width: 320px) {
+            h1 {
+                font-size: 20px;
+            }
+            input[type="text"],
+            input[type="file"],
+            textarea {
+                width: 200px;
+            }
+        }
+        @media (max-width: 280px) {
+            h1 {
+                font-size: 18px;
+            }
+            input[type="text"],
+            input[type="file"],
+            textarea {
+                width: 160px;
+            }
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        @keyframes slideInDown {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideInLeft {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smart ATS</h1>
+        <form id="ats-form">
+            <label for="resume">Upload Resume(Pdf):</label>
+            <input type="file" id="resume" name="resume" accept=".pdf" required>
+            <label for="job-description">Job Description:</label>
+            <textarea id="job-description" name="job-description" rows="5" required></textarea>
+            <button type="submit"><i class="fas fa-search"></i>Analyze</button>
+        </form>
+        <div class="loading" id="loadingSpinner" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        <div id="output"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.js"></script>
+    <script>
+        const form = document.getElementById('ats-form');
+        const outputContainer = document.getElementById('output');
+        const spinner = document.querySelector('.spinner');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loadingSpinner.style.display = 'flex'; // Show spinner
+
+            const resumeFile = document.getElementById('resume').files[0];
+            const jobDescription = document.getElementById('job-description').value;
+
+            if (!resumeFile || !jobDescription) {
+                alert('Please provide both resume and job description.');
+                loadingSpinner.style.display = 'none'; // Hide spinner
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('resume_pdf', resumeFile);
+            formData.append('job_description', jobDescription);
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/smart_ats', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const responseData = await response.json(); // Parse JSON response
+
+                // Extract main output from the response
+                const mainOutput = responseData.response;
+
+                // Convert Markdown to HTML using marked.js
+                const htmlOutput = marked(mainOutput);
+
+                // Display output in the output container
+                outputContainer.innerHTML = `<div>${htmlOutput}</div>`;
+                outputContainer.classList.add('show');
+            } catch (error) {
+                console.error('Error:', error);
+                outputContainer.innerHTML = '<pre>An error occurred while processing the request.</pre>';
+                outputContainer.classList.add('show');
+            } finally {
+                loadingSpinner.style.display = 'none'; // Hide spinner
+            }
+        });
+    </script>
+</body>
+</html>

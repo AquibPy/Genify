@@ -51,8 +51,12 @@ async def chat(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/blog_generator_ui",description="Provides a simple web interface to interact with the Blog Generator")
-async def chat(request: Request):
+async def blog_ui(request: Request):
     return templates.TemplateResponse("blog_generator.html", {"request": request})
+
+@app.get("/ats",description="Provides a simple web interface to interact with the Smart ATS")
+async def ats(request: Request):
+    return templates.TemplateResponse("ats.html", {"request": request})
 
 @app.post("/invoice_extractor",description="This route extracts information from invoices based on provided images and prompts.")
 async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
@@ -363,14 +367,17 @@ async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...
                 with a deep understanding of tech field,software engineering,data science ,data analyst
                 and big data engineer. Your task is to evaluate the resume based on the given job description.
                 You must consider the job market is very competitive and you should provide 
-                best assistance for improving thr resumes. Assign the percentage Matching based 
+                best assistance for improving the resumes. Assign the percentage Matching based 
                 on job description and
                 the missing keywords with high accuracy
                 resume:{text}
                 job description:{job_description}
 
                 I want the response as per below structure
-                {{"Job Description Match": "%", "MissingKeywords": [], "Profile Summary": ""}}
+                Job Description Match": "%","MissingKeywords": [],"Profile Summary": "".
+                Also tell what more should be add or to be remove in the resume.
+                Also provide the list of some  techincal questions along with their answers that can be asked in the interview based on job description.
+
                 """
         response=model.generate_content(ats_prompt)
         db = MongoDB()

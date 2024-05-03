@@ -102,11 +102,17 @@ percentage, missing keywords, and profile summary.
 - **Input:** Users need to upload a resume file and provide a job description as text.
 - **Output:** The endpoint provides insights in JSON format, including job description match.
 
-### 17. ChatBot
+### 17. Blog Genertor UI
 
 - **Route:** `/blog_generator_ui`
 - **Description:** Provides a simple web interface to interact with the Blog Generator.
-- **Try ChatBot:**  [Blog Generator](https://llm-pgc4.onrender.com/blog_generator_ui)
+- **Try Blog Generator:**  [Blog Generator](https://llm-pgc4.onrender.com/blog_generator_ui)
+
+### 18. Smart ATS UI
+
+- **Route:** `/ats`
+- **Description:** Provides a simple web interface to interact with the smart ats.
+- **Try ATS:**  [Smart ATS](https://llm-pgc4.onrender.com/blog_generator_ui)
 
 ## Usage
 
