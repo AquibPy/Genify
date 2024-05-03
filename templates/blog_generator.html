@@ -267,7 +267,7 @@
             loadingSpinner.style.display = 'flex';
             btnContainer.style.display = 'none';
 
-            const response = await fetch('http://127.0.0.1:8000/blog_generator', {
+            const response = await fetch('https://llm-pgc4.onrender.com/blog_generator', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
