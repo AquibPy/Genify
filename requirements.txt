@@ -10,8 +10,8 @@ python-multipart
 PyPDF2
 unstructured
 youtube_transcript_api
-llama-index
-pypdf
+# llama-index
+# pypdf
 pymongo
 pytest
 groq
