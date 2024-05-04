@@ -1,4 +1,5 @@
 import os
+import uvicorn
 from fastapi import FastAPI,Form,File,UploadFile, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
@@ -393,3 +394,7 @@ async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...
         return ResponseText(response=response.text)
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
+    
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app)
