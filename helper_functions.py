@@ -200,7 +200,7 @@ def groq_pdf(pdf,model):
             model_name=model
     )
     text = "".join(page.extract_text() for page in PdfReader(pdf).pages)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitter.split_text(text)
     vectorstore = FAISS.from_texts(chunks, embedding=google_embedding)
     retriever = vectorstore.as_retriever()
