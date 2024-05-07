@@ -4,21 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart ATS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.css">
     <style>
+        /* Dark mode styles */
+        :root {
+            --color-bg: #121212;
+            --color-fg: #ffffff;
+        }
+
+        /* Light mode styles */
+        [data-theme="light"] {
+            --color-bg: #ffffff;
+            --color-fg: #000000;
+        }
+
+        /* Common styles */
         body {
             font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #c0e3e8, #92aedb);
+            background-color: var(--color-bg);
+            color: var(--color-fg);
             margin: 0;
             padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
         }
+
         .container {
+            position: relative;
             max-width: 800px;
             margin: 50px auto;
             padding: 40px;
-            background-color: #fff;
+            background-color: #fff; /* Light mode background */
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             display: flex;
@@ -26,6 +43,12 @@
             align-items: center;
             animation: fadeIn 1s ease;
         }
+
+        [data-theme="dark"] .container {
+            background-color: #2b2b2b; /* Dark mode background */
+            /* Add any other desired styles for dark mode */
+        }
+
         h1 {
             text-align: center;
             margin-bottom: 30px;
@@ -34,6 +57,7 @@
             position: relative;
             animation: slideInDown 1s ease;
         }
+
         h1::before {
             content: "";
             position: absolute;
@@ -44,6 +68,7 @@
             height: 3px;
             background-color: #3d8ec9;
         }
+
         form {
             display: flex;
             flex-direction: column;
@@ -51,11 +76,13 @@
             margin-bottom: 30px;
             animation: slideInLeft 1s ease;
         }
+
         label {
             font-size: 1.2rem;
             margin-bottom: 10px;
             color: #3d8ec9;
         }
+
         input[type="file"],
         textarea {
             width: 300px;
@@ -67,12 +94,14 @@
             animation: fadeIn 1s ease;
             background-color: rgba(255, 255, 255, 0.9);
         }
+
         input[type="file"]:focus,
         textarea:focus {
             border-color: #3d8ec9;
             outline: none;
             background-color: rgba(255, 255, 255, 1);
         }
+
         button {
             padding: 10px 20px;
             background-color: #3d8ec9;
@@ -86,30 +115,36 @@
             align-items: center;
             animation: slideInRight 1s ease;
         }
+
         button:hover {
             background-color: #357bb5;
         }
+
         button i {
             margin-right: 10px;
         }
+
         #output {
-            border: 1px solid #ccc;
+            border: 1px solid var(--color-fg);
             padding: 20px;
             border-radius: 5px;
-            background-color: #f7f7f7;
+            background-color: var(--color-bg);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
             animation: fadeIn 1s ease;
         }
+
         #output:hover {
             transform: scale(1.02);
         }
+
         #output h2 {
             margin-top: 0;
-            color: #3d8ec9;
+            color: var(--color-fg);
             position: relative;
             padding-bottom: 10px;
         }
+
         #output h2::after {
             content: "";
             position: absolute;
@@ -117,18 +152,21 @@
             left: 0;
             width: 50px;
             height: 2px;
-            background-color: #3d8ec9;
+            background-color: var(--color-fg);
         }
+
         #output p {
             margin-bottom: 10px;
-            color: #555;
+            color: var(--color-fg);
         }
+
         .loading {
             justify-content: center;
             align-items: center;
             height: 100px;
             display: none;
         }
+
         .spinner {
             border: 4px solid rgba(61, 142, 201, 0.2);
             border-left-color: #3d8ec9;
@@ -137,32 +175,39 @@
             height: 30px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
+
         .btn-container {
             display: flex;
             justify-content: center;
             margin-top: 20px;
             animation: fadeIn 1s ease;
         }
+
         .btn-container button {
             margin: 0 10px;
         }
+
         .copy-btn {
             background-color: #6c757d;
             transition: background-color 0.3s ease;
         }
+
         .copy-btn:hover {
             background-color: #5a6268;
         }
+
         @media (max-width: 800px) {
             .container {
                 margin: 20px auto;
             }
         }
+
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
@@ -174,6 +219,7 @@
                 max-width: 100%;
             }
         }
+
         @media (max-width: 400px) {
             h1 {
                 font-size: 24px;
@@ -187,6 +233,7 @@
                 width: 250px;
             }
         }
+
         @media (max-width: 320px) {
             h1 {
                 font-size: 20px;
@@ -197,6 +244,7 @@
                 width: 200px;
             }
         }
+
         @media (max-width: 280px) {
             h1 {
                 font-size: 18px;
@@ -207,6 +255,7 @@
                 width: 160px;
             }
         }
+
         @keyframes fadeIn {
             0% {
                 opacity: 0;
@@ -215,6 +264,7 @@
                 opacity: 1;
             }
         }
+
         @keyframes slideInDown {
             0% {
                 transform: translateY(-100%);
@@ -223,6 +273,7 @@
                 transform: translateY(0);
             }
         }
+
         @keyframes slideInLeft {
             0% {
                 transform: translateX(-100%);
@@ -231,6 +282,7 @@
                 transform: translateX(0);
             }
         }
+
         @keyframes slideInRight {
             0% {
                 transform: translateX(100%);
@@ -239,10 +291,31 @@
                 transform: translateX(0);
             }
         }
+
+        /* Rest of your CSS styles... */
+        
+        #theme-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        #theme-toggle i {
+            font-size: 20px;
+            color: #3d8ec9;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <button type="button" id="theme-toggle" aria-label="Toggle dark mode">
+            <i class="fas fa-sun"></i>
+            <i class="fas fa-moon"></i>
+        </button>
         <h1>Smart ATS</h1>
         <form id="ats-form">
             <label for="resume">Upload Resume(Pdf):</label>
@@ -264,9 +337,23 @@
             <p>© Made with ❤️ by <a href='https://www.linkedin.com/in/aquibpy/' target='_blank'>Mohd Aquib</a></p>
         </footer>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.js"></script>
     <script>
+        // Dark mode toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Check for user preference in local storage
+        const localStorageTheme = localStorage.getItem('theme');
+        if (localStorageTheme) {
+            document.documentElement.setAttribute('data-theme', localStorageTheme);
+        }
+
         const form = document.getElementById('ats-form');
         const outputContainer = document.getElementById('output');
         const spinner = document.querySelector('.spinner');
