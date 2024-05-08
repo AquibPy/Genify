@@ -74,3 +74,10 @@ If the context is not helpful, please provide the original questions.
 QUESTIONS:
 """
 )
+
+diffusion_models = {
+    "DreamShaper_v7"  : "https://api-inference.huggingface.co/models/SimianLuo/LCM_Dreamshaper_v7",
+    "Animagine_xl" : "https://api-inference.huggingface.co/models/cagliostrolab/animagine-xl-3.0",
+    "Stable_Diffusion_base" : "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+    "Stable_Diffusion_v2" : "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+}

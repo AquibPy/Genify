@@ -1,6 +1,9 @@
 import os
 import uvicorn
-from fastapi import FastAPI,Form,File,UploadFile, Request
+import io
+import requests
+from PIL import Image
+from fastapi import FastAPI,Form,File,UploadFile, Request ,Response
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse,RedirectResponse,StreamingResponse
@@ -8,7 +11,7 @@ from typing import List,Optional
 from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
-from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5
+from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5, diffusion_models
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
@@ -394,6 +397,43 @@ async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...
         return ResponseText(response=response.text)
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
+    
+@app.post("/text2image",description=
+        """
+            This API provides access to the following diffusion models for generating images from text prompts.
+            
+            Models you can use for generating image are:
+
+            1. DreamShaper_v7 - A highly capable and versatile text-to-image model, suitable for a wide range of image generation tasks.
+
+            2. Animagine_xl - A specialized model for generating high-quality anime-style images from text prompts.
+
+            3. Stable_Diffusion_base - The base version of the popular Stable Diffusion model, suitable for general-purpose image generation.
+
+            4. Stable_Diffusion_v2 - The latest version of Stable Diffusion, with improved performance and quality compared to the base version.
+        """)
+def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("DreamShaper_v7")):
+    try:
+        if model in diffusion_models:
+            def query(payload):
+                api_key = os.getenv("HUGGINGFACE_API_KEY")
+                headers = {"Authorization": f"Bearer {api_key}"}
+                response = requests.post(diffusion_models[model], headers=headers, json=payload)
+                return response.content
+
+            image_bytes = query({"inputs": prompt})
+            image = Image.open(io.BytesIO(image_bytes))
+            bytes_io = io.BytesIO()
+            image.save(bytes_io, format="PNG")
+            bytes_io.seek(0)
+            return Response(bytes_io.getvalue(), media_type="image/png")
+        else:
+            return ResponseText(response="Invalid model name")
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Request Exception: {str(e)}")
+    #     return ResponseText(response="Busy server: Please try later")
+    except Exception as e:
+        return ResponseText(response="Busy server: Please try later")
     
 if __name__ == '__main__':
     import uvicorn

@@ -114,6 +114,26 @@ percentage, missing keywords, and profile summary.
 - **Description:** Provides a simple web interface to interact with the smart ats.
 - **Try ATS:**  [Smart ATS](https://llm-pgc4.onrender.com/blog_generator_ui)
 
+### 19. Text to Image using Diffusion Models
+
+- **Route:** `/text2image`
+description: This route allows you to generate images using various diffusion models available on Hugging Face.
+
+    You can choose from the following models -
+
+    **DreamShaper v7**: A highly capable and versatile text-to-image model, suitable for a wide range of image generation tasks.
+
+    **Animagine XL**: A specialized model for generating high-quality anime-style images from text prompts.
+
+    **Stable Diffusion Base**: The base version of the popular Stable Diffusion model, suitable for general-purpose image generation.
+
+    **Stable Diffusion v2**: The latest version of Stable Diffusion, with improved performance and quality compared to the base version.
+
+    To generate an image, send a POST request to the `/text2image` endpoint with the desired model and prompt in the request body.
+
+    **Request Body:** `{ "model": "DreamShaper_v7", "prompt": "An astronaut riding a horse on the moon" }` The response will be the generated image in PNG format.
+
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
