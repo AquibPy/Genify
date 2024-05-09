@@ -81,3 +81,20 @@ diffusion_models = {
     "Stable_Diffusion_base" : "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
     "Stable_Diffusion_v2" : "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
 }
+
+summary_para = """
+In the vast landscape of human history, civilizations have risen and fallen, leaving behind legacies that shape our present. 
+From the ancient civilizations of Mesopotamia and Egypt, where the foundations of writing, agriculture, and governance were laid, 
+to the grand empires of Rome and China, which expanded their reach through conquest and trade, the story of humanity is one of ambition, innovation, and conflict. 
+The Middle Ages saw the emergence of feudalism in Europe, characterized by the exchange of land for loyalty and protection, 
+while the Islamic Golden Age ushered in a period of scientific, artistic, and philosophical advancement in the Muslim world. 
+The Renaissance in Europe sparked a revival of classical learning and ushered in an era of exploration and discovery, 
+leading to the age of Enlightenment, where reason and empiricism challenged traditional authority. 
+The Industrial Revolution transformed societies with technological advancements, urbanization, 
+and shifts in economic production, while the 20th century witnessed unprecedented global conflicts, 
+technological leaps, and social revolutions. Today, in the 21st century, 
+we stand at the intersection of unprecedented technological advancement and pressing global challenges, 
+navigating issues of climate change, political polarization, and the ethical implications of artificial intelligence.
+As we reflect on the journey of humanity, from ancient civilizations to the digital age, we are reminded of our shared past and
+the collective responsibility to shape a more equitable and sustainable future.
+"""

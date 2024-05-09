@@ -2,7 +2,7 @@ import os
 from settings import GOOGLE_EMBEDDING,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,\
 prompt_pdf,question_prompt_template,question_refine_template, GEMINI_PRO
 from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings,ChatGoogleGenerativeAI
-from langchain.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders import CSVLoader
 from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader,WebBaseLoader
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter,TokenTextSplitter
@@ -191,7 +191,7 @@ def questions_generator(doc):
                                             question_prompt=PROMPT_QUESTIONS, 
                                             refine_prompt=REFINE_PROMPT_QUESTIONS)
 
-    ques = ques_gen_chain.run(document_ques_gen)
+    ques = ques_gen_chain.invoke(document_ques_gen)
     return ques
 
 def groq_pdf(pdf,model):
