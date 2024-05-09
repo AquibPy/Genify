@@ -18,32 +18,28 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set Google API Key
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      - name: Set HuggingFace API Key
-        env:
-          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
-      - name: Set Groq API Key
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-      - name: Set MongoDB Credentials
-        env:
-          MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
-          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
-          MONGO_COLLECTION: ${{ secrets.MONGO_COLLECTION }}
-      - name: Set LangChain API Key
-        env:
-          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+
+      - name: Set Environment Variables
+        run: |
+          echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> $GITHUB_ENV
+          echo "HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}" >> $GITHUB_ENV
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> $GITHUB_ENV
+          echo "MONGO_USERNAME=${{ secrets.MONGO_USERNAME }}" >> $GITHUB_ENV
+          echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> $GITHUB_ENV
+          echo "MONGO_DBNAME=${{ secrets.MONGO_DBNAME }}" >> $GITHUB_ENV
+          echo "MONGO_COLLECTION=${{ secrets.MONGO_COLLECTION }}" >> $GITHUB_ENV
+          echo "LANGCHAIN_API_KEY=${{ secrets.LANGCHAIN_API_KEY }}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Run Tests
         run: |
           pytest test_main.py
