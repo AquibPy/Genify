@@ -412,7 +412,7 @@ async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...
 
             4. Stable_Diffusion_v2 - The latest version of Stable Diffusion, with improved performance and quality compared to the base version.
         """)
-def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("DreamShaper_v7")):
+def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("Stable_Diffusion_base")):
     try:
         if model in diffusion_models:
             def query(payload):
