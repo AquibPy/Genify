@@ -187,7 +187,7 @@ def questions_generator(doc):
     REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=question_refine_template)
     ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 
                                             chain_type = "refine", 
-                                            verbose = True, 
+                                            verbose = False, 
                                             question_prompt=PROMPT_QUESTIONS, 
                                             refine_prompt=REFINE_PROMPT_QUESTIONS)
 

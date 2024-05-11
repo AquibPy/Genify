@@ -18,3 +18,4 @@ groq
 langchain-groq
 jinja2
 tiktoken
+redis

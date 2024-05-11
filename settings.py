@@ -5,6 +5,7 @@ FAQ_FILE = 'data\\faqs.csv'
 EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
+REDIS_PORT = 19061
 qa_prompt = """
     Given the following context and a question, generate an answer based on this context only.
     In the answer try to provide as much text as possible from "response" section in the source document context without making much changes.

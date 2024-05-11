@@ -63,3 +63,20 @@ class MongoDB():
         except Exception as e:
             print(f"Error: {e}")
             return {'Status': 'Deleting failed.'}
+    
+    def read_by_endpoint(self, endpoint_name):
+        try:
+            # Construct the filter with the appropriate endpoint format
+            filter = {"endpoint": f"/{endpoint_name}"}
+            documents = list(self.collection.find(filter))
+            if documents:
+                output = [
+                    {item: document[item] for item in document if item != '_id'}
+                    for document in documents
+                ]
+            else:
+                output = {'Status': 'No documents found.'}
+            return output
+        except Exception as e:
+            print(f"Error: {e}")
+            return {'Status': 'Reading failed.'}

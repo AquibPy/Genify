@@ -16,6 +16,40 @@ This project contains a collection of APIs that leverage Generative AI models to
 
 Generative AI, powered by advanced machine learning models, enables the creation of content, responses, and insights that mimic human-like behavior. This project harnesses the capabilities of Generative AI to provide a set of APIs catering to various tasks across different domains.
 
+## DataBase Support
+
+This project supports MongoDB and Redis for data storage and caching respectively.
+
+### MongoDB
+
+![MongoDB Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/MongoDB_Logo.svg/512px-MongoDB_Logo.svg.png)
+
+- **Description:** MongoDB is a popular NoSQL database used for storing unstructured data.
+- **Scalability:** Highly scalable, suitable for handling large volumes of data.
+- **Flexibility:** Offers flexible schemas, allowing for dynamic and evolving data structures.
+- **Document-Oriented:** Stores data in JSON-like documents, making it easy to work with for developers.
+- **High Performance:** Designed for high performance and low latency, suitable for real-time applications.
+- **Community Support:** Large and active community, providing resources, documentation, and support.
+- **Cross-Platform:** Supports multiple platforms including Windows, macOS, and Linux.
+- **Integration:** Easily integrates with various programming languages and frameworks.
+- **Aggregation Framework:** Provides powerful aggregation framework for data analysis and reporting.
+- **Replication and Sharding:** Supports replication and sharding for high availability and scalability.
+
+### Redis
+
+![Redis Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Logo-redis.svg/2560px-Logo-redis.svg.png)
+
+- **Description:** Redis is an open-source, in-memory data structure store used as a database, cache, and message broker.
+- **In-Memory Storage:** Data is stored in memory, allowing for fast read and write operations.
+- **Data Structures:** Supports various data structures such as strings, hashes, lists, sets, and sorted sets.
+- **High Performance:** Known for its high performance and low latency, making it suitable for real-time applications.
+- **Persistence Options:** Provides different persistence options including snapshots and append-only files for data durability.
+- **Pub/Sub Messaging:** Includes pub/sub messaging functionality, allowing for message passing between clients.
+- **Replication:** Supports master-slave replication for high availability and fault tolerance.
+- **Lua Scripting:** Allows for scripting using Lua, enabling complex operations and transactions.
+- **Clustering:** Supports clustering for horizontal scaling and distributing data across multiple nodes.
+- **Atomic Operations:** Provides atomic operations on data structures, ensuring consistency and reliability.
+
 ## Endpoints
 
 ### 1. Invoice Extractor
@@ -132,7 +166,6 @@ description: This route allows you to generate images using various diffusion mo
     To generate an image, send a POST request to the `/text2image` endpoint with the desired model and prompt in the request body.
 
     **Request Body:** `{ "model": "DreamShaper_v7", "prompt": "An astronaut riding a horse on the moon" }` The response will be the generated image in PNG format.
-
 
 ## Usage
 

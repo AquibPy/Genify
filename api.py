@@ -3,6 +3,8 @@ import uvicorn
 import io
 import requests
 from PIL import Image
+from redis import Redis
+import json
 from fastapi import FastAPI,Form,File,UploadFile, Request ,Response
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
@@ -11,7 +13,7 @@ from typing import List,Optional
 from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
-from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5, diffusion_models
+from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5, diffusion_models, REDIS_PORT
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
@@ -25,6 +27,8 @@ os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"]="genify"
 os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
+
+redis = Redis(host=os.getenv("REDIS_HOST"), port=REDIS_PORT, password=os.getenv("REDIS_PASSWORD"))
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
@@ -84,42 +88,57 @@ async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
 @app.post("/qa_from_faqs",description="The endpoint uses the retrieved question-answer to generate a response to the user's prompt")
 async def question_answer(prompt: str = Form(...)):
     try:
-        chain = get_qa_chain()
-        out = chain.invoke(prompt)
-        db = MongoDB()
-        payload = {
-                "endpoint" : "/qa_from_faqs",
-                "prompt" : prompt,
-                "output" : out["result"]
-            }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
+        # Check if the response is cached in Redis
+        cache_key = f"qa_from_faqs:{prompt}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            out = {"result": cached_response.decode("utf-8")}
+        else:
+            print("Fetching response from the API")
+            chain = get_qa_chain()
+            out = chain.invoke(prompt)
+            redis.set(cache_key, out["result"], ex=60)
+            db = MongoDB()
+            payload = {"endpoint": "/qa_from_faqs", "prompt": prompt, "output": out["result"]}
+            mongo_data = {"Document": payload}
+            result = db.insert_data(mongo_data)
+            print(result)
         return ResponseText(response=out["result"])
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
 
-@app.post("/qa_url_doc",description="In this route just add the doc or  url(of any news article,blogs etc) and then ask the question in the prompt ")
+@app.post("/qa_url_doc", description="In this route just add the doc or url(of any news article,blogs etc) and then ask the question in the prompt ")
 async def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(None), prompt: str = Form(...)):
     try:
         if url:
-            chain = get_url_doc_qa(url,documents)
-        elif documents:
-            contents = [i.file.read().decode("utf-8") for i  in documents ]
-            print(contents)
-            # contents = documents.file.read().decode("utf-8")
-            chain = get_url_doc_qa(url,contents)
+            cache_key = f"qa_url_doc:{prompt}:{str(url)}"
+            cached_response = redis.get(cache_key)
+            if cached_response:
+                print("Retrieving response from Redis cache")
+                out = {"result": cached_response.decode("utf-8")}
+                return ResponseText(response=out["result"])
+            else:
+                chain = get_url_doc_qa(url, documents)
+                out = chain.invoke(prompt)
+                redis.set(cache_key, out["result"], ex=60)
         else:
-            raise Exception("Please provide either a URL or upload a document file.")
-        out = chain.invoke(prompt)
+            if documents:
+                contents = [i.file.read().decode("utf-8") for i in documents]
+                print(contents)
+                chain = get_url_doc_qa(url, contents)
+            else:
+                raise Exception("Please provide either a URL or upload a document file.")
+            out = chain.invoke(prompt)
+
         db = MongoDB()
         payload = {
-                "endpoint" : "/qa_url_doc",
-                "prompt" : prompt,
-                "url": url,
-                "documents":"If URl is null then they might have upload .txt file",
-                "output" : out["result"]
-            }
+            "endpoint": "/qa_url_doc",
+            "prompt": prompt,
+            "url": url,
+            "documents": "If URL is null then they might have upload .txt file",
+            "output": out["result"]
+        }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
         print(result)
@@ -127,18 +146,25 @@ async def qa_url_doc(url: list = Form(None), documents: List[UploadFile] = File(
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
 
-@app.post("/youtube_video_transcribe_summarizer",description="The endpoint uses Youtube URL to generate a summary of a video")
+@app.post("/youtube_video_transcribe_summarizer", description="The endpoint uses Youtube URL to generate a summary of a video")
 async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
     try:
+        cache_key = f"youtube_video_transcribe_summarizer:{url}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
         model = genai.GenerativeModel(GEMINI_PRO)
         transcript_text = extract_transcript_details(url)
-        response=model.generate_content(youtube_transcribe_prompt+transcript_text)
+        response = model.generate_content(youtube_transcribe_prompt + transcript_text)
+        redis.set(cache_key, response.text, ex=60)
         db = MongoDB()
         payload = {
-                "endpoint" : "/youtube_video_transcribe_summarizer",
-                "url" : url,
-                "output" : response.text
-            }
+            "endpoint": "/youtube_video_transcribe_summarizer",
+            "url": url,
+            "output": response.text
+        }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
         print(result)
@@ -178,21 +204,24 @@ async def health_app_gemini(image_file: UploadFile = File(...), height: str = Fo
     print(result)
     return ResponseText(response=json_compatible_data)
     
-@app.post("/blog_generator",description="This route will generate the blog based on the desired topic.")
+@app.post("/blog_generator", description="This route will generate the blog based on the desired topic.")
 async def blogs(topic: str = Form("Generative AI")):
     try:
+        cache_key = f"blog_generator:{topic}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
         model = genai.GenerativeModel(GEMINI_PRO_1_5)
-        blog_prompt=f"""
-               You are expert in blog writting. 
-               write a blog on the topic {topic}. 
-               Use a friendly and informative tone, and include examples and tips to encourage readers to get started with topic provided.
-            """
-        response=model.generate_content(blog_prompt)
+        blog_prompt = f""" You are expert in blog writing. Write a blog on the topic {topic}. Use a friendly and informative tone, and include examples and tips to encourage readers to get started with the topic provided. """
+        response = model.generate_content(blog_prompt)
+        redis.set(cache_key, response.text, ex=60)
         db = MongoDB()
         payload = {
-            "endpoint" : "/blog_generator",
-            "topic" : topic,
-            "output" : response.text
+            "endpoint": "/blog_generator",
+            "topic": topic,
+            "output": response.text
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
@@ -220,43 +249,59 @@ async def talk_pdf(pdf: UploadFile = File(...),prompt: str = Form(...)):
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
 
-@app.post("/Text2SQL",description="""This route will generate the SQL query and results from employees table based on the prompt given.
-          \nColumns present in the table are Employee_ID, Name, Department, Title, Email, City, Salary, Work_Experience""")
+@app.post("/Text2SQL", description="""This route will generate the SQL query and results from employees table based on the prompt given. \nColumns present in the table are Employee_ID, Name, Department, Title, Email, City, Salary, Work_Experience""")
 async def sql_query(prompt: str = Form("Tell me the employees living in city Noida")):
     try:
+        cache_key = f"text2sql:{prompt}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            cached_response = cached_response.decode("utf-8")
+            cached_data = json.loads(cached_response)
+            return cached_data
+
         model = genai.GenerativeModel(GEMINI_PRO_1_5)
-        response=model.generate_content([text2sql_prompt,prompt])
+        response = model.generate_content([text2sql_prompt, prompt])
         output_query = remove_substrings(response.text)
         print(output_query)
-        output = read_sql_query(remove_substrings(output_query),EMPLOYEE_DB)
+        output = read_sql_query(remove_substrings(output_query), EMPLOYEE_DB)
+        cached_data = {"response": {"SQL Query": output_query, "Data": output}}
+        redis.set(cache_key, json.dumps(cached_data), ex=60)
         db = MongoDB()
         payload = {
-            "endpoint" : "/Text2SQL",
-            "prompt" : prompt,
-            "SQL Query" : output_query,
-            "output" : output
+            "endpoint": "/Text2SQL",
+            "prompt": prompt,
+            "SQL Query": output_query,
+            "output": output
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
         print(result)
-        return {"response" : {"SQL Query":output_query,"Data": output}}
+        return {"response": {"SQL Query": output_query, "Data": output}}
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
 
-@app.post("/questions_generator",description="""The endpoint uses the pdf and generate the questions.
+@app.post("/questions_generator", description="""The endpoint uses the pdf and generate the questions.
           \nThis will be helpful for the students or teachers preparing for their exams or test. """)
 async def pdf_questions_generator(pdf: UploadFile = File(...)):
     try:
+        cache_key = f"questions_generator:{pdf.filename}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
         out = questions_generator(pdf.file)
+        redis.set(cache_key, out["output_text"], ex=60)
         db = MongoDB()
         payload = {
-            "endpoint" : "/questions_generator",
-            "output" : out
+            "endpoint": "/questions_generator",
+            "output": out["output_text"]
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
         print(result)
-        return ResponseText(response=remove_substrings(out))
+        return ResponseText(response=remove_substrings(out["output_text"]))
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
     
@@ -336,14 +381,21 @@ async def talk_pdf_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
 
-@app.post("/summarize_audio",description="""Endpoint to summarize an uploaded audio file using gemini-1.5-pro-latest.""")
+@app.post("/summarize_audio", description="""Endpoint to summarize an uploaded audio file using gemini-1.5-pro-latest.""")
 async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
     try:
+        cache_key = f"summarize_audio:{audio_file.filename}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
         summary_text = await summarize_audio(audio_file)
+        redis.set(cache_key, summary_text, ex=10)
         db = MongoDB()
         payload = {
-            "endpoint" : "/summarize_audio",
-            "output" : summary_text
+            "endpoint": "/summarize_audio",
+            "output": summary_text
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
@@ -351,27 +403,32 @@ async def summarize_audio_endpoint(audio_file: UploadFile = File(...)):
         return ResponseText(response=summary_text)
     except Exception as e:
         return {"error": str(e)}
-    
 
 @app.post("/stream_chat",description="This endpoint streams responses from the language model based on the user's input message.")
 async def stream_chat(message: str = Form("What is RLHF in LLM?"),llm: str = Form("llama3-70b-8192")):
     generator = chatbot_send_message(message,model=llm)
     return StreamingResponse(generator, media_type="text/event-stream")
 
-@app.post("/smart_ats",description="""This endpoint is developed using the powerful 
+@app.post("/smart_ats", description="""This endpoint is developed using the powerful 
           Gemini Pro 1.5 model to streamline the hiring process by analyzing job descriptions and resumes. 
           It provides valuable insights such as job description match, 
           missing keywords, and profile summary""")
-async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...)):
+async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(...)):
     try:
+        cache_key = f"smart_ats:{resume_pdf.filename}:{job_description}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
         text = extraxt_pdf_text(resume_pdf.file)
         model = genai.GenerativeModel(GEMINI_PRO_1_5)
-        ats_prompt=f"""
-                Hey Act Like a skilled or very experience ATS(Application Tracking System)
-                with a deep understanding of tech field,software engineering,data science ,data analyst
-                and big data engineer. Your task is to evaluate the resume based on the given job description.
+        ats_prompt = f"""
+                Hey Act Like a skilled or very experienced ATS (Application Tracking System)
+                with a deep understanding of the tech field, software engineering, data science, data analysis,
+                and big data engineering. Your task is to evaluate the resume based on the given job description.
                 You must consider the job market is very competitive and you should provide 
-                best assistance for improving the resumes. Assign the percentage Matching based 
+                the best assistance for improving the resumes. Assign the percentage Matching based 
                 on job description and
                 the missing keywords with high accuracy
                 resume:{text}
@@ -379,17 +436,18 @@ async def ats(resume_pdf: UploadFile = File(...),job_description: str = Form(...
 
                 I want the response as per below structure
                 Job Description Match": "%","MissingKeywords": [],"Profile Summary": "".
-                Also tell what more should be add or to be remove in the resume.
-                Also provide the list of some  techincal questions along with their answers that can be asked in the interview based on job description.
-
+                Also, tell what more should be added or to be removed in the resume.
+                Also, provide the list of some technical questions along with their answers that can be asked in the interview based on the job description.
                 """
-        response=model.generate_content(ats_prompt)
+
+        response = model.generate_content(ats_prompt)
+        redis.set(cache_key, response.text, ex=20)
         db = MongoDB()
         payload = {
-            "endpoint" : "/smart_ats",
+            "endpoint": "/smart_ats",
             "resume": text,
-            "job description" : job_description,
-            "ATS Output" : response.text
+            "job description": job_description,
+            "ATS Output": response.text
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
@@ -434,6 +492,25 @@ def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = 
     #     return ResponseText(response="Busy server: Please try later")
     except Exception as e:
         return ResponseText(response="Busy server: Please try later")
+
+@app.get("/get_data/{endpoint_name}")
+async def get_data(endpoint_name: str):
+    cache_key = f"{endpoint_name}"
+    cached_data = redis.get(cache_key)
+
+    if cached_data:
+        print("Retrieving data from Redis cache")
+        data = json.loads(cached_data)
+        return data
+    
+    print("Retrieving data from MongoDB")
+    db = MongoDB()
+    data = db.read_by_endpoint(endpoint_name)
+
+    if isinstance(data, list):
+        redis.set(cache_key, json.dumps(data), ex=60)
+
+    return data
     
 if __name__ == '__main__':
     import uvicorn
