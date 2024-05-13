@@ -6,7 +6,6 @@ EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
 REDIS_PORT = 19061
-# SECRET_KEY = "dOZfxDmHFSmrRlTTNcW0IlsfCkxEJ7-8x4xYFs_WQnE"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 qa_prompt = """
