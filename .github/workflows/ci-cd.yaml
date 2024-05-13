@@ -33,7 +33,11 @@ jobs:
           echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> $GITHUB_ENV
           echo "MONGO_DBNAME=${{ secrets.MONGO_DBNAME }}" >> $GITHUB_ENV
           echo "MONGO_COLLECTION=${{ secrets.MONGO_COLLECTION }}" >> $GITHUB_ENV
+          echo "MONGO_COLLECTION_USER=${{ secrets.MONGO_COLLECTION_USER }}" >> $GITHUB_ENV
           echo "LANGCHAIN_API_KEY=${{ secrets.LANGCHAIN_API_KEY }}" >> $GITHUB_ENV
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
+          echo "TOKEN_SECRET_KEY=${{ secrets.TOKEN_SECRET_KEY }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |

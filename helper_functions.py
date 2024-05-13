@@ -1,6 +1,5 @@
 import os
-from settings import GOOGLE_EMBEDDING,FAQ_FILE,INSTRUCTOR_EMBEDDING,VECTORDB_PATH,qa_prompt,\
-prompt_pdf,question_prompt_template,question_refine_template, GEMINI_PRO
+import settings
 from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings,ChatGoogleGenerativeAI
 from langchain_community.document_loaders import CSVLoader
 from langchain_community.document_loaders import UnstructuredURLLoader,PyPDFLoader,WebBaseLoader
@@ -32,7 +31,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 PaLM_embeddings = GooglePalmEmbeddings(google_api_key=os.getenv("GOOGLE_API_KEY"))
 
-google_embedding = GoogleGenerativeAIEmbeddings(model = GOOGLE_EMBEDDING)
+google_embedding = GoogleGenerativeAIEmbeddings(model = settings.GOOGLE_EMBEDDING)
 
 '''
 if you want you can try instructor embeddings also. Below is thge code :
@@ -40,7 +39,7 @@ if you want you can try instructor embeddings also. Below is thge code :
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
 embeddings = HuggingFaceInferenceAPIEmbeddings(
-    api_key=os.getenv("HUGGINGFACE_API_KEY"), model_name=INSTRUCTOR_EMBEDDING,query_instruction="Represent the query for retrieval: "
+    api_key=os.getenv("HUGGINGFACE_API_KEY"), model_name=settings.INSTRUCTOR_EMBEDDING,query_instruction="Represent the query for retrieval: "
 )
 '''
 
@@ -64,17 +63,17 @@ def get_gemini_response_health(image_file, prompt):
         return f"Error: {str(e)}"
 
 def create_vector_db():
-    loader = CSVLoader(file_path=FAQ_FILE)
+    loader = CSVLoader(file_path=settings.FAQ_FILE)
     data = loader.load()
     vectordb = FAISS.from_documents(documents = data,embedding=PaLM_embeddings)
-    vectordb.save_local(VECTORDB_PATH)
+    vectordb.save_local(settings.VECTORDB_PATH)
 
 def get_qa_chain():
-    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
-    vectordb = FAISS.load_local(VECTORDB_PATH,PaLM_embeddings,allow_dangerous_deserialization=True)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    vectordb = FAISS.load_local(settings.VECTORDB_PATH,PaLM_embeddings,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
-        template=qa_prompt, input_variables=["context", "question"]
+        template=settings.qa_prompt, input_variables=["context", "question"]
     )
 
     chain = RetrievalQA.from_chain_type(llm=llm,
@@ -87,7 +86,7 @@ def get_qa_chain():
     return chain
 
 def get_url_doc_qa(url,doc):
-    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     if url:
         loader = WebBaseLoader(url)
         data = loader.load()
@@ -129,10 +128,10 @@ def get_gemini_pdf(pdf):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
     vector_store = FAISS.from_texts(chunks, embedding=google_embedding)
-    llm = GoogleGenerativeAI(model= GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     retriever = vector_store.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
-        template=prompt_pdf, input_variables=["context", "question"]
+        template=settings.prompt_pdf, input_variables=["context", "question"]
     )
 
     chain = RetrievalQA.from_chain_type(llm=llm,
@@ -182,9 +181,9 @@ def questions_generator(doc):
     # splitter_ans_gen = TokenTextSplitter(chunk_size = 1000,chunk_overlap = 100)
     # document_answer_gen = splitter_ans_gen.split_documents(document_ques_gen)
 
-    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= GEMINI_PRO,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
-    PROMPT_QUESTIONS = PromptTemplate(template=question_prompt_template, input_variables=["text"])
-    REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=question_refine_template)
+    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= settings.GEMINI_PRO,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    PROMPT_QUESTIONS = PromptTemplate(template=settings.question_prompt_template, input_variables=["text"])
+    REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=settings.question_refine_template)
     ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 
                                             chain_type = "refine", 
                                             verbose = False, 

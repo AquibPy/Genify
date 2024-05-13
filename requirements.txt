@@ -19,3 +19,4 @@ langchain-groq
 jinja2
 tiktoken
 redis
+python-jose

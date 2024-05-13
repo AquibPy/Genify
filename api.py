@@ -5,15 +5,13 @@ import requests
 from PIL import Image
 from redis import Redis
 import json
-from fastapi import FastAPI,Form,File,UploadFile, Request ,Response
+from fastapi import FastAPI,Form,File,UploadFile, Request ,Response, HTTPException, status, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse,RedirectResponse,StreamingResponse
 from typing import List,Optional
-from pydantic import BaseModel
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
-from settings import invoice_prompt,youtube_transcribe_prompt,text2sql_prompt,EMPLOYEE_DB,GEMINI_PRO,GEMINI_PRO_1_5, diffusion_models, REDIS_PORT
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
@@ -22,13 +20,24 @@ from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import ChatPromptTemplate
+from auth import create_access_token
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import timedelta
+from jose import jwt, JWTError
+import settings
+from models import UserCreate, ResponseText
+
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"]="genify"
 os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
 
-redis = Redis(host=os.getenv("REDIS_HOST"), port=REDIS_PORT, password=os.getenv("REDIS_PASSWORD"))
+redis = Redis(host=os.getenv("REDIS_HOST"), port=settings.REDIS_PORT, password=os.getenv("REDIS_PASSWORD"))
+
+mongo_client = MongoDB(collection_name=os.getenv("MONGO_COLLECTION_USER"))
+users_collection = mongo_client.collection
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
@@ -45,14 +54,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class ResponseText(BaseModel):
-    response: str
-
-
 @app.get("/", response_class=RedirectResponse)
 async def home():
     return RedirectResponse("/docs")
 
+@app.post("/signup")
+async def signup(user: UserCreate):
+    # Check if user already exists
+    existing_user = users_collection.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Insert new user to database
+    user_dict = user.model_dump()
+    users_collection.insert_one(user_dict)
+
+    return {"message": "User created successfully"}
+
+# Signin route
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    # Check if user exists in database
+    user = users_collection.find_one({"email": form_data.username})
+    if not user or user["password"] != form_data.password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create access token
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["email"]}, expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/chatbot",description="Provides a simple web interface to interact with the chatbot")
 async def chat(request: Request):
@@ -73,7 +110,7 @@ async def gemini(image_file: UploadFile = File(...), prompt: str = Form(...)):
             "mime_type": "image/jpeg",
             "data": image
         }]
-    output = get_gemini_response(invoice_prompt, image_parts, prompt)
+    output = get_gemini_response(settings.invoice_prompt, image_parts, prompt)
     db = MongoDB()
     payload = {
             "endpoint" : "/invoice_extractor",
@@ -155,9 +192,9 @@ async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
             print("Retrieving response from Redis cache")
             return ResponseText(response=cached_response.decode("utf-8"))
 
-        model = genai.GenerativeModel(GEMINI_PRO)
+        model = genai.GenerativeModel(settings.GEMINI_PRO)
         transcript_text = extract_transcript_details(url)
-        response = model.generate_content(youtube_transcribe_prompt + transcript_text)
+        response = model.generate_content(settings.youtube_transcribe_prompt + transcript_text)
         redis.set(cache_key, response.text, ex=60)
         db = MongoDB()
         payload = {
@@ -213,7 +250,7 @@ async def blogs(topic: str = Form("Generative AI")):
             print("Retrieving response from Redis cache")
             return ResponseText(response=cached_response.decode("utf-8"))
 
-        model = genai.GenerativeModel(GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
         blog_prompt = f""" You are expert in blog writing. Write a blog on the topic {topic}. Use a friendly and informative tone, and include examples and tips to encourage readers to get started with the topic provided. """
         response = model.generate_content(blog_prompt)
         redis.set(cache_key, response.text, ex=60)
@@ -260,11 +297,11 @@ async def sql_query(prompt: str = Form("Tell me the employees living in city Noi
             cached_data = json.loads(cached_response)
             return cached_data
 
-        model = genai.GenerativeModel(GEMINI_PRO_1_5)
-        response = model.generate_content([text2sql_prompt, prompt])
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        response = model.generate_content([settings.text2sql_prompt, prompt])
         output_query = remove_substrings(response.text)
         print(output_query)
-        output = read_sql_query(remove_substrings(output_query), EMPLOYEE_DB)
+        output = read_sql_query(remove_substrings(output_query), settings.EMPLOYEE_DB)
         cached_data = {"response": {"SQL Query": output_query, "Data": output}}
         redis.set(cache_key, json.dumps(cached_data), ex=60)
         db = MongoDB()
@@ -422,7 +459,7 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
             return ResponseText(response=cached_response.decode("utf-8"))
 
         text = extraxt_pdf_text(resume_pdf.file)
-        model = genai.GenerativeModel(GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
         ats_prompt = f"""
                 Hey Act Like a skilled or very experienced ATS (Application Tracking System)
                 with a deep understanding of the tech field, software engineering, data science, data analysis,
@@ -472,11 +509,11 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
         """)
 def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("Stable_Diffusion_base")):
     try:
-        if model in diffusion_models:
+        if model in settings.diffusion_models:
             def query(payload):
                 api_key = os.getenv("HUGGINGFACE_API_KEY")
                 headers = {"Authorization": f"Bearer {api_key}"}
-                response = requests.post(diffusion_models[model], headers=headers, json=payload)
+                response = requests.post(settings.diffusion_models[model], headers=headers, json=payload)
                 return response.content
 
             image_bytes = query({"inputs": prompt})
@@ -494,7 +531,17 @@ def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = 
         return ResponseText(response="Busy server: Please try later")
 
 @app.get("/get_data/{endpoint_name}")
-async def get_data(endpoint_name: str):
+async def get_data(endpoint_name: str, token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     cache_key = f"{endpoint_name}"
     cached_data = redis.get(cache_key)
 

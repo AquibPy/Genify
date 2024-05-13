@@ -3,11 +3,11 @@ from bson import ObjectId
 import os
 
 class MongoDB():
-    def __init__(self):
+    def __init__(self, dbname=None, collection_name=None):
         self.username = os.getenv("MONGO_USERNAME")
         self.password = os.getenv("MONGO_PASSWORD")
-        self.dbname = os.getenv("MONGO_DBNAME")
-        self.collection_name = os.getenv("MONGO_COLLECTION")
+        self.dbname = os.getenv("MONGO_DBNAME") if dbname is None else dbname
+        self.collection_name = os.getenv("MONGO_COLLECTION") if collection_name is None else collection_name
         try:
             self.client = MongoClient(f"mongodb+srv://{self.username}:{self.password}@cluster0.sdx7i86.mongodb.net/{self.dbname}") ## i am using mongodb atlas. Use can use your local mongodb
             database = self.dbname
