@@ -26,6 +26,9 @@ from datetime import timedelta
 from jose import jwt, JWTError
 import settings
 from models import UserCreate, ResponseText
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from uuid import uuid4
 
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
@@ -65,11 +68,45 @@ async def signup(user: UserCreate):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Insert new user to database
-    user_dict = user.model_dump()
-    users_collection.insert_one(user_dict)
+    # Insert new user to database with email_verified set to False
+    verification_token = str(uuid4())
+    new_user = {
+        "email": user.email,
+        "password": user.password,
+        "email_verified": False,
+        "verification_token": verification_token
+    }
+    users_collection.insert_one(new_user)
 
-    return {"message": "User created successfully"}
+    # Send verification email
+    message = Mail(
+        from_email='maquib100@myamu.ac.in',
+        to_emails=user.email,
+        subject='Verify your email',
+        html_content=f'Please verify your email using this token: {verification_token}'
+    )
+
+    try:
+        sendgrid_api = os.getenv("SENDGRID_API_KEY")
+        sg = SendGridAPIClient(sendgrid_api)
+        response = sg.send(message)
+        print(response.status_code)
+    except Exception as e:
+        print(e.message)
+
+    return {"message": "User created successfully. Please check your email to verify your account."}
+
+@app.post("/verify-email")
+async def verify_email(token: str):
+    # Find user with the provided verification token
+    user = users_collection.find_one({"verification_token": token})
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    # Mark the user's email as verified
+    users_collection.update_one({"_id": user["_id"]}, {"$set": {"email_verified": True}})
+
+    return {"message": "Email verified successfully"}
 
 # Signin route
 @app.post("/token")
