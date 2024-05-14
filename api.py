@@ -507,7 +507,18 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
 
             4. Stable_Diffusion_v2 - The latest version of Stable Diffusion, with improved performance and quality compared to the base version.
         """)
-def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("Stable_Diffusion_base")):
+def generate_image(prompt: str = Form("Astronaut riding a horse"), model: str = Form("Stable_Diffusion_base"),
+                   token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     try:
         if model in settings.diffusion_models:
             def query(payload):
