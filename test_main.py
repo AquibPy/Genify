@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 client = TestClient(app)
 # db = MongoDB()
 
-
 def test_invoice_extractor():
     with patch('api.MongoDB') as MockMongoDB:
         mock_insert_data = MagicMock(return_value={'Status': 'Successfully Inserted!!!', 'Document_id': 'mock_id'})
@@ -178,3 +177,15 @@ def test_qa_url_doc_with_document():
             response_data = response.json()
             assert "response" in response_data
             assert isinstance(response_data["response"], str)
+
+def test_advance_rag():
+    pdf_file = open("data/yolo.pdf", "rb")
+    data = {"question": "Summary in 200 words" ,"model": "llama3-70b-8192"}
+
+    with patch('api.MongoDB') as MockMongoDB:
+        mock_insert_data = MagicMock(return_value={'Status': 'Successfully Inserted!!!', 'Document_id': 'mock_id'})
+        MockMongoDB.return_value.insert_data = mock_insert_data
+        
+        response = client.post("/advance_rag_llama_index", files={"pdf": pdf_file}, data=data)
+        assert response.status_code == 200
+        assert "response" in response.json()
