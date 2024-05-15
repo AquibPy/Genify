@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio,chatbot_send_message,extraxt_pdf_text
+    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -529,7 +529,27 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
         return ResponseText(response=response.text)
     except Exception as e:
         return ResponseText(response=f"Error: {str(e)}")
-    
+
+@app.post("/advance_rag_llama_index",description="The endpoint build a Router that can choose whether to do vector search or summarization\
+          In model input default is llama3-70b-8192 but you can choose mixtral-8x7b-32768, gemma-7b-it and llama3-8b-8192.")
+async def llama_index_rag(pdf: UploadFile = File(...),question: str = Form(...),
+                       model: Optional[str] = Form('llama3-70b-8192')):
+    try:
+        rag_output = advance_rag_llama_index(pdf,model,question)
+        db = MongoDB()
+        payload = {
+            "endpoint" : "/advance_rag_llama_index",
+            "model" : model,
+            "prompt" : question,
+            "output" : rag_output
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=rag_output)
+    except Exception as e:
+        return ResponseText(response=f"Error: {str(e)}")
+
 @app.post("/text2image",description=
         """
             This API provides access to the following diffusion models for generating images from text prompts.

@@ -24,6 +24,13 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.schema import HumanMessage
+from llama_index.llms.groq import Groq
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from llama_index.core import SimpleDirectoryReader,VectorStoreIndex
+from llama_index import core
+from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.query_engine import RouterQueryEngine
+import shutil
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -271,6 +278,46 @@ def extraxt_pdf_text(uploaded_file):
         page=reader.pages[page]
         text+=str(page.extract_text())
     return text
+
+def advance_rag_llama_index(pdf,model,question):
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.' + pdf.filename.split('.')[-1]) as tmp:
+            shutil.copyfileobj(pdf.file, tmp)
+            tmp_path = tmp.name
+    except Exception as e:
+        raise Exception(f"Error handling uploaded file: {e}")
+    
+    finally:
+        pdf.file.close()
+    llm = Groq(model=model,api_key=os.getenv("GROQ_API_KEY"))
+    embed_model = HuggingFaceInferenceAPIEmbeddings(
+    api_key=os.getenv("HUGGINGFACE_API_KEY"), model_name=settings.INSTRUCTOR_EMBEDDING,query_instruction="Represent the query for retrieval: ")
+
+    core.Settings.llm = llm
+    core.Settings.embed_model = embed_model
+
+    docs = SimpleDirectoryReader(input_files=[tmp_path]).load_data()
+    index = VectorStoreIndex.from_documents(docs)
+    vector_tool = QueryEngineTool(
+    index.as_query_engine(),
+    metadata=ToolMetadata(
+        name="vector_search",
+        description="Useful for searching for specific facts."))
+
+    summary_tool = QueryEngineTool(
+    index.as_query_engine(response_mode="tree_summarize"),
+    metadata=ToolMetadata(
+        name="summary",
+        description="Useful for summarizing an entire document."))
+
+    query_engine = RouterQueryEngine.from_defaults(
+        [vector_tool, summary_tool], select_multi=False, verbose=True, llm=llm)
+    
+    response = query_engine.query(question)
+    os.remove(tmp_path)
+
+    return str(response)
+
 
 if __name__ == "__main__":
     create_vector_db()

@@ -151,7 +151,7 @@ percentage, missing keywords, and profile summary.
 ### 19. Text to Image using Diffusion Models
 
 - **Route:** `/text2image`
-description: This route allows you to generate images using various diffusion models available on Hugging Face.
+- **Description:** This route allows you to generate images using various diffusion models available on Hugging Face.
 
     You can choose from the following models -
 
@@ -166,6 +166,15 @@ description: This route allows you to generate images using various diffusion mo
     To generate an image, send a POST request to the `/text2image` endpoint with the desired model and prompt in the request body.
 
     **Request Body:** `{ "model": "DreamShaper_v7", "prompt": "An astronaut riding a horse on the moon" }` The response will be the generated image in PNG format.
+
+### 20. Advanced RAG with LLaMA Index
+
+- **Route:** `/advance_rag_llama_index`
+- **Description:** This API provides an advanced retrieval-augmented generation (RAG) functionality using the LLaMA Index. It allows users to upload a document and ask questions, enabling the API to search for specific facts or summarize the document based on the query.
+- **Feature:**
+  - Upload PDF documents and ask natural language questions.
+  - Choose between vector search or summarization for responses.
+  - Support for multiple Open Source LLMs models.
 
 ## Usage
 

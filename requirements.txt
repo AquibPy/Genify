@@ -21,3 +21,5 @@ tiktoken
 redis
 python-jose
 sendgrid
+llama-index-llms-groq
+llama-index-embeddings-langchain
