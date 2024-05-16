@@ -1,3 +1,5 @@
+[![wakatime](https://wakatime.com/badge/user/36345258-0e7d-4799-92b8-d71688c8e385/project/018d63c9-7b84-4706-8a54-cc5a26d06bca.svg)](https://wakatime.com/badge/user/36345258-0e7d-4799-92b8-d71688c8e385/project/018d63c9-7b84-4706-8a54-cc5a26d06bca)
+
 # Genify
 
 This project contains a collection of APIs that leverage Generative AI models to perform various tasks. These APIs are designed to address different use cases such as extracting information from invoices, generating responses from FAQs, summarizing YouTube videos, generating blog posts, analyzing health-related data from images, and executing SQL queries from text prompts for database operations related to employee data.
