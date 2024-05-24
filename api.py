@@ -287,7 +287,7 @@ async def blogs(topic: str = Form("Generative AI")):
             print("Retrieving response from Redis cache")
             return ResponseText(response=cached_response.decode("utf-8"))
 
-        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_FLASH)
         blog_prompt = f""" You are expert in blog writing. Write a blog on the topic {topic}. Use a friendly and informative tone, and include examples and tips to encourage readers to get started with the topic provided. """
         response = model.generate_content(blog_prompt)
         redis.set(cache_key, response.text, ex=60)
