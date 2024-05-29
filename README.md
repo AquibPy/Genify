@@ -178,6 +178,17 @@ percentage, missing keywords, and profile summary.
   - Choose between vector search or summarization for responses.
   - Support for multiple Open Source LLMs models.
 
+### 21. Tech News Agent using Crew ai
+
+- **Route:** `/news_agent`
+- **Description:** This endpoint leverages AI agents to conduct research and generate articles on various tech topics. The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories.
+- **Features:**
+  - Accepts a `topic` parameter specifying the tech topic of interest.
+  - Utilizes caching mechanisms for improved performance by storing and retrieving responses from Redis cache.
+  - Integrates with MongoDB for storing endpoint usage data.
+  - Returns articles and research findings related to the specified tech topic.
+  - Handles exceptions gracefully and returns error messages in JSON format.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
