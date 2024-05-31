@@ -230,7 +230,7 @@ async def youtube_video_transcribe_summarizer_gemini(url: str = Form(...)):
             print("Retrieving response from Redis cache")
             return ResponseText(response=cached_response.decode("utf-8"))
 
-        model = genai.GenerativeModel(settings.GEMINI_PRO)
+        model = genai.GenerativeModel(settings.GEMINI_FLASH)
         transcript_text = extract_transcript_details(url)
         response = model.generate_content(settings.youtube_transcribe_prompt + transcript_text)
         redis.set(cache_key, response.text, ex=60)
