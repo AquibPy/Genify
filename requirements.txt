@@ -24,6 +24,7 @@ python-jose
 sendgrid
 llama-index-llms-groq
 llama-index-embeddings-langchain
+grpcio
 # crewai
 # crewai-tools
 # proto-plus
