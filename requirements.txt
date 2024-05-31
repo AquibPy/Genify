@@ -27,4 +27,4 @@ llama-index-embeddings-langchain
 grpcio
 # crewai
 # crewai-tools
-# proto-plus
+proto-plus
