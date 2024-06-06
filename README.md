@@ -189,6 +189,16 @@ percentage, missing keywords, and profile summary.
   - Returns articles and research findings related to the specified tech topic.
   - Handles exceptions gracefully and returns error messages in JSON format.
 
+### 22. Query Database
+
+- **Route:** `/query_db`
+- **Description:** This API endpoint facilitates querying SQL databases using a Cohere ReAct Agent, integrated with Langchain's SQLDBToolkit.
+- **Feature:**
+  - Upload a `.db` file containing the database to be queried.
+  - Provide a natural language prompt or query to retrieve relevant information
+  from the database.
+  - Utilizes a Cohere ReAct Agent to process user queries and generate responses.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
@@ -204,7 +214,7 @@ Each endpoint accepts specific parameters as described in the respective endpoin
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/AquibPy/LLM-use-cases-API.git
+   git clone https://github.com/AquibPy/Genify.git
    ```
 
 2. Install dependencies:
@@ -213,7 +223,7 @@ Each endpoint accepts specific parameters as described in the respective endpoin
     pip install -r requirements.txt
     ```
 
-3. Create ```.evn``` file
+3. Create ```.env``` file
 
     Save Google and Hugging Face API key in this file.
 
@@ -221,7 +231,7 @@ Each endpoint accepts specific parameters as described in the respective endpoin
 
 Start the FastAPI server by running the following command:
     ```
-    uvicorn main:app --reload
+    fastapi run api.py
     ```
 
 ## Contributing

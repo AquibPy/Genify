@@ -28,3 +28,4 @@ grpcio
 # crewai
 # crewai-tools
 proto-plus
+langchain-cohere

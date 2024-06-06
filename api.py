@@ -15,9 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index
+    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index,parse_sql_response
 from langchain_groq import ChatGroq
-from langchain.chains import ConversationChain
+from langchain.chains.conversation.base import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import ChatPromptTemplate
 from auth import create_access_token
@@ -30,6 +30,14 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from uuid import uuid4
 # from tech_news_agent.crew import run_crew
+from langchain.agents import AgentExecutor
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
+from langchain_cohere.chat_models import ChatCohere
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+import tempfile
+import shutil
 
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
@@ -654,6 +662,61 @@ async def get_data(endpoint_name: str, token: str = Depends(oauth2_scheme)):
 #         return ResponseText(response=output)
 #     except Exception as e:
 #         return {"error": str(e)}
+
+@app.post("/query_db",description="""
+          The Query Database endpoint provides a service for interacting with SQL databases using a Cohere ReAct Agent. 
+          It leverages Langchain's existing SQLDBToolkit to answer questions and perform queries over SQL database.
+          """)
+async def query_db(database: UploadFile = File(...), prompt: str = Form(...)):
+    try: 
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.' + database.filename.split('.')[-1]) as temp_file:
+            shutil.copyfileobj(database.file, temp_file)
+            db_path = temp_file.name
+
+        llm = ChatCohere(model="command-r-plus", temperature=0.1, verbose=True,cohere_api_key=os.getenv("COHERE_API_KEY"))
+        db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
+        toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+        context = toolkit.get_context()
+        tools = toolkit.get_tools()
+        chat_prompt = ChatPromptTemplate.from_template("{input}")
+
+        agent = create_cohere_react_agent(
+            llm=llm,
+            tools=tools,
+            prompt=chat_prompt
+        )
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True,
+            return_intermediate_steps=False,
+        )
+
+        preamble = settings.QUERY_DB_PROMPT.format(schema_info=context)
+        
+        out = agent_executor.invoke({
+           "input": prompt,
+           "preamble": preamble
+        })
+
+        output  = parse_sql_response(out["output"])
+        db = MongoDB()
+        payload = {
+            "endpoint": "/query_db",
+            "input": prompt,
+            "output": output
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+
+        return ResponseText(response=output)
+
+    except Exception as e:
+        raise Exception(f"Error handling uploaded file: {e}")
+
+    finally:
+        database.file.close()
     
 if __name__ == '__main__':
     import uvicorn

@@ -317,7 +317,26 @@ def advance_rag_llama_index(pdf,model,question):
     os.remove(tmp_path)
 
     return str(response)
+import re
+def parse_sql_response(response):
+    # Split the response into individual SQL statements
+    sql_statements = re.split(r"(?<=\*\/)\n\n+", response)
+    
+    # Format each SQL statement
+    formatted_sql_statements = []
+    for sql_statement in sql_statements:
+        if sql_statement.strip():
+            # Remove comments
+            sql_statement = re.sub(r'/\*.*?\*/', '', sql_statement, flags=re.DOTALL)
+            # Replace newlines and tabs with spaces
+            sql_statement = sql_statement.replace('\n', ' ').replace('\t', ' ')
+            # Add a newline after each semicolon
+            sql_statement = re.sub(r';(?!\s*CREATE|INSERT|SELECT|UPDATE|DELETE)', ';\n', sql_statement)
+            formatted_sql_statements.append(sql_statement.strip())
 
+    # Join the formatted SQL statements into a single string
+    formatted_response = '\n'.join(formatted_sql_statements)
+    return formatted_response
 
 if __name__ == "__main__":
     create_vector_db()
