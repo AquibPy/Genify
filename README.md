@@ -212,6 +212,16 @@ percentage, missing keywords, and profile summary.
   - **Image Quality Note:** Indicates if certain aspects are 'Unable to be determined based on the provided image.'
   - **Disclaimer:** Includes the disclaimer: "Consult with a Doctor before making any decisions."
 
+### 24. NoteGem: Automated Note-Taking Assistant
+
+- **Route:** `/NoteGem`
+- **Description:** This API endpoint leverages the Google Gemini AI Model to generate comprehensive notes from YouTube video transcripts.
+- **Feature:**
+  - **Input Video URL:** Users can provide a YouTube video URL for processing.
+  - **Transcript Extraction:** The API extracts the transcript from the provided YouTube video.
+  - **Error Handling for Transcripts:** If the transcript is not available, it returns a message indicating that the transcript is not available for transcription.
+  - **AI Summary Generation:** The AI model generates a structured summary of the transcript focusing on main points, critical information, key takeaways, examples or case studies, quotes, and actionable steps.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

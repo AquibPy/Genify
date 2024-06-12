@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index,parse_sql_response
+    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index,parse_sql_response, extract_video_id
 from langchain_groq import ChatGroq
 from langchain.chains.conversation.base import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -38,6 +38,7 @@ from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 import tempfile
 import shutil
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
@@ -737,6 +738,37 @@ async def medigem(image_file: UploadFile = File(...)):
     result = db.insert_data(mongo_data)
     print(result)
     return ResponseText(response=remove_substrings(response.text))
+
+@app.post("/NoteGem", description="This API endpoint leverages the Google Gemini AI Model to generate comprehensive notes from YouTube video transcripts")
+def process_video(video_url: str = Form(...)):
+    video_id = extract_video_id(video_url)
+    if not video_id:
+        raise HTTPException(status_code=400, detail="Invalid YouTube URL")
+    
+    try:
+        transcript_text = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript = " ".join([i["text"] for i in transcript_text])
+    except (TranscriptsDisabled, NoTranscriptFound):
+        return {"transcript": "Transcript not available", "error": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    try:
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        response = model.generate_content(settings.NOTE_GEN_PROMPT + transcript)
+        summary = response.text
+        db = MongoDB()
+        payload = {
+                "endpoint" : "/NoteGem",
+                "video_url": video_url,
+                "output" : response.text
+            }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=summary)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == '__main__':
     import uvicorn

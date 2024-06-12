@@ -338,6 +338,21 @@ def parse_sql_response(response):
     formatted_response = '\n'.join(formatted_sql_statements)
     return formatted_response
 
+def extract_video_id(url):
+    video_id = None
+    regex_patterns = [
+        r"(?<=v=)[^#\&\?]*",
+        r"(?<=be/)[^#\&\?]*",
+        r"(?<=embed/)[^#\&\?]*",
+        r"(?<=youtu.be/)[^#\&\?]*"
+    ]
+    for pattern in regex_patterns:
+        match = re.search(pattern, url)
+        if match:
+            video_id = match.group(0)
+            break
+    return video_id
+
 if __name__ == "__main__":
     create_vector_db()
     chain = get_qa_chain()

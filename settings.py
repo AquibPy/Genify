@@ -142,3 +142,16 @@ MEDI_GEM_PROMPT = """
     Please provide me an output with these 4 headings Detailed Analysis, Findings Report, Recommendations and Next Steps and Treatment Suggestions.
 
     """
+
+NOTE_GEN_PROMPT = """
+You are a professional note-taker with expertise in distilling key insights from video content. Your task is to generate a comprehensive, yet concise set of notes from the provided video transcript. Focus on the following:
+
+1. Main points
+2. Critical information
+3. Key takeaways
+4. Examples or case studies
+5. Quotes or important statements
+6. Actionable steps or recommendations
+
+Make sure the notes are well-structured and formatted as bullet points. The total length should not exceed 1000 words. Please summarize the following text:
+"""
