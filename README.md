@@ -199,6 +199,19 @@ percentage, missing keywords, and profile summary.
   from the database.
   - Utilizes a Cohere ReAct Agent to process user queries and generate responses.
 
+### 23. MediGem: Medical Diagnosis AI Assistant
+
+- **Route:** `/MediGem`
+- **Description:** This API endpoint leverages the New Google Gemini AI Model to analyze medical images and identify potential health conditions.
+- **Feature:**
+  - **Upload a Medical Image:** Users can upload a medical image in JPEG format for analysis.
+  - **AI Analysis:** The AI model examines the image to identify anomalies, diseases, or health issues.
+  - **Findings Report:** Documents observed anomalies or signs of disease in a structured format.
+  - **Recommendations:** Suggests potential next steps, including further tests or treatments.
+  - **Treatment Suggestions:** Recommends possible treatment options or interventions if applicable.
+  - **Image Quality Note:** Indicates if certain aspects are 'Unable to be determined based on the provided image.'
+  - **Disclaimer:** Includes the disclaimer: "Consult with a Doctor before making any decisions."
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

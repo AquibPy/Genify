@@ -717,6 +717,26 @@ async def query_db(database: UploadFile = File(...), prompt: str = Form(...)):
 
     finally:
         database.file.close()
+
+@app.post("/MediGem",description="Medical Diagnosis AI Assistant")
+async def medigem(image_file: UploadFile = File(...)):
+    
+    image = image_file.file.read()
+    image_parts = [{
+            "mime_type": "image/jpeg",
+            "data": image
+        }]
+    model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+    response = model.generate_content([image_parts[0], settings.MEDI_GEM_PROMPT])
+    db = MongoDB()
+    payload = {
+            "endpoint" : "/MediGem",
+            "output" : response.text
+        }
+    mongo_data = {"Document": payload}
+    result = db.insert_data(mongo_data)
+    print(result)
+    return ResponseText(response=remove_substrings(response.text))
     
 if __name__ == '__main__':
     import uvicorn
