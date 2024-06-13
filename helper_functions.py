@@ -76,8 +76,8 @@ def create_vector_db():
     vectordb.save_local(settings.VECTORDB_PATH)
 
 def get_qa_chain():
-    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
-    vectordb = FAISS.load_local(settings.VECTORDB_PATH,PaLM_embeddings,allow_dangerous_deserialization=True)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.2)
+    vectordb = FAISS.load_local(settings.VECTORDB_PATH,google_embedding,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
         template=settings.qa_prompt, input_variables=["context", "question"]
