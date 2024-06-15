@@ -753,7 +753,7 @@ async def medigem(image_file: UploadFile = File(...)):
     return ResponseText(response=remove_substrings(response.text))
 
 @app.post("/NoteGem", description="This API endpoint leverages the Google Gemini AI Model to generate comprehensive notes from YouTube video transcripts")
-@limiter.limit("5/minute")
+@limiter.limit("5/2minute")
 
 async def process_video(request: Request, video_url: str = Form(...)):
     video_id = extract_video_id(video_url)
