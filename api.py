@@ -39,6 +39,9 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 import tempfile
 import shutil
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
@@ -54,6 +57,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI(title="Genify By Mohd Aquib",
               summary="This API contains routes of different Gen AI usecases")
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limit = limiter
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request:Request,exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code= status.HTTP_429_TOO_MANY_REQUESTS,
+        content= {"response": "Limit exceeded, please try again after 2 minute !!!!!!"}
+    )
 
 templates = Jinja2Templates(directory="templates")
 
@@ -740,7 +753,9 @@ async def medigem(image_file: UploadFile = File(...)):
     return ResponseText(response=remove_substrings(response.text))
 
 @app.post("/NoteGem", description="This API endpoint leverages the Google Gemini AI Model to generate comprehensive notes from YouTube video transcripts")
-def process_video(video_url: str = Form(...)):
+@limiter.limit("5/minute")
+
+async def process_video(request: Request, video_url: str = Form(...)):
     video_id = extract_video_id(video_url)
     if not video_id:
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
@@ -754,9 +769,16 @@ def process_video(video_url: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
     try:
+        cache_key = f"notegem:{video_id}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+        
         model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
         response = model.generate_content(settings.NOTE_GEN_PROMPT + transcript)
         summary = response.text
+        redis.set(cache_key, summary, ex=60)
         db = MongoDB()
         payload = {
                 "endpoint" : "/NoteGem",

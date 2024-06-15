@@ -29,3 +29,4 @@ grpcio
 # crewai-tools
 proto-plus
 langchain-cohere
+slowapi

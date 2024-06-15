@@ -52,6 +52,20 @@ This project supports MongoDB and Redis for data storage and caching respectivel
 - **Clustering:** Supports clustering for horizontal scaling and distributing data across multiple nodes.
 - **Atomic Operations:** Provides atomic operations on data structures, ensuring consistency and reliability.
 
+# Rate Limiting
+
+This FastAPI application includes rate limiting to control the number of requests that can be made to certain endpoints within a specified time frame. Rate limiting helps prevent abuse of the API and ensures fair usage among consumers.
+
+## Rate Limiting Configuration
+
+Rate limiting is implemented using `slowapi`, which provides middleware for rate limiting based on IP address or other identifiers.
+
+### Configuration Details
+
+- **Limits**: Requests are limited to a certain number per minute.
+- **Identifier**: Rate limiting is applied based on the IP address of the client.
+- **Exceeding Limit**: Clients exceeding the limit receive a 429 HTTP status code with an appropriate message.
+
 ## Endpoints
 
 ### 1. Invoice Extractor
