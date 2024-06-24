@@ -24,7 +24,7 @@ news_researcher=Agent(
         "innovation, eager to explore and share knowledge that could change"
         "the world."
     ),
-    # tools=[tool],
+    tools=[tool],
     llm=llm,
     allow_delegation=True
 
@@ -42,7 +42,7 @@ news_writer = Agent(
     "engaging narratives that captivate and educate, bringing new"
     "discoveries to light in an accessible manner."
   ),
-  # tools=[tool],
+  tools=[tool],
   llm=llm,
   allow_delegation=False
 )

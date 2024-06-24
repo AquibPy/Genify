@@ -25,8 +25,8 @@ sendgrid
 llama-index-llms-groq
 llama-index-embeddings-langchain
 grpcio
-# crewai
-# crewai-tools
+crewai
+crewai-tools
 proto-plus
 langchain-cohere
 slowapi

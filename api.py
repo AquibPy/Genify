@@ -29,7 +29,7 @@ from models import UserCreate, ResponseText
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from uuid import uuid4
-# from tech_news_agent.crew import run_crew
+from tech_news_agent.crew import run_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
@@ -650,32 +650,32 @@ async def get_data(endpoint_name: str, token: str = Depends(oauth2_scheme)):
 
     return data
 
-# @app.post("/news_agent",description="""
-#           This endpoint leverages AI agents to conduct research and generate articles on various tech topics. 
-#           The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories
-#           """)
-# async def run_news_agent(topic: str = Form("AI in healthcare")):
-#     try:
-#         cache_key = f"news_agent:{topic}"
-#         cached_response = redis.get(cache_key)
-#         if cached_response:
-#             print("Retrieving response from Redis cache")
-#             return ResponseText(response=cached_response.decode("utf-8"))
+@app.post("/news_agent",description="""
+          This endpoint leverages AI agents to conduct research and generate articles on various tech topics. 
+          The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories
+          """)
+async def run_news_agent(topic: str = Form("AI in healthcare")):
+    try:
+        cache_key = f"news_agent:{topic}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
 
-#         output = run_crew(topic=topic)
-#         redis.set(cache_key, output, ex=10)
-#         db = MongoDB()
-#         payload = {
-#             "endpoint": "/news_agent",
-#             "topic" : topic,
-#             "output": output
-#         }
-#         mongo_data = {"Document": payload}
-#         result = db.insert_data(mongo_data)
-#         print(result)
-#         return ResponseText(response=output)
-#     except Exception as e:
-#         return {"error": str(e)}
+        output = run_crew(topic=topic)
+        redis.set(cache_key, output, ex=10)
+        db = MongoDB()
+        payload = {
+            "endpoint": "/news_agent",
+            "topic" : topic,
+            "output": output
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=output)
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/query_db",description="""
           The Query Database endpoint provides a service for interacting with SQL databases using a Cohere ReAct Agent. 
