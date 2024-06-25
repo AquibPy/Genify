@@ -30,6 +30,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from uuid import uuid4
 from tech_news_agent.crew import run_crew
+from investment_risk_analyst_agent.crew import run_investment_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
@@ -791,6 +792,45 @@ async def process_video(request: Request, video_url: str = Form(...)):
         return ResponseText(response=summary)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/investment_risk_agent",description="""
+          This route implements an investment risk analyst agent system using a crew of AI agents. 
+          Each agent is responsible for different aspects of financial trading and risk management, 
+          working together to analyze data, develop trading strategies, assess risks, and plan executions.
+
+          NOTE : Output will take more than 5 minutes as multiple agents are working together.
+          """)
+@limiter.limit("2/30minute")
+async def run_risk_investment_agent(request:Request,stock_selection: str = Form("AAPL"),
+                                    risk_tolerance : str = Form("Medium"),
+                                    trading_strategy_preference: str = Form("Day Trading")):
+    try:
+        input_data = {"stock_selection": stock_selection,
+                      "risk_tolerance": risk_tolerance,
+                      "trading_strategy_preference": trading_strategy_preference,
+                      "news_impact_consideration": True
+                      }
+        print(input_data)
+        cache_key = f"investment_risk_agent:{input_data}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
+        report = run_investment_crew(input_data)
+        redis.set(cache_key, report, ex=10)
+        db = MongoDB()
+        payload = {
+            "endpoint": "/investment_risk_agent",
+            "input_data" : input_data,
+            "Investment_report": report
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=report)
+    except Exception as e:
+        return {"error": str(e)}
     
 if __name__ == '__main__':
     import uvicorn

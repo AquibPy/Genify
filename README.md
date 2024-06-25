@@ -236,6 +236,17 @@ percentage, missing keywords, and profile summary.
   - **Error Handling for Transcripts:** If the transcript is not available, it returns a message indicating that the transcript is not available for transcription.
   - **AI Summary Generation:** The AI model generates a structured summary of the transcript focusing on main points, critical information, key takeaways, examples or case studies, quotes, and actionable steps.
 
+### 25. Investment Risk Analyst Agent
+
+- **Route:** `/investment_risk_agent`
+- **Description:** This API endpoint coordinates a team of AI agents to perform comprehensive investment risk analysis and strategy development.
+- **Feature:**
+  - **Input Data:** Users can provide input data including stock selection, initial capital, risk tolerance, trading strategy preference, and news impact consideration.
+  - **Data Analysis:** The data analyst agent processes the input data to extract relevant financial information.
+  - **Strategy Development:** The trading strategy agent formulates a suitable trading strategy based on the analyzed data and user preferences.
+  - **Risk Assessment:** The risk management agent evaluates potential risks associated with the trading strategy and suggests mitigation measures.
+  - **Execution Planning:** The execution agent develops a detailed plan for executing the trading strategy, considering the assessed risks.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

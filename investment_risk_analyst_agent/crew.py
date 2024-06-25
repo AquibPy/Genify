@@ -7,7 +7,7 @@ import os
 from investment_risk_analyst_agent.agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
 from investment_risk_analyst_agent.tasks import data_analysis_task,strategy_development_task,risk_assessment_task,execution_planning_task
 
-llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash",
+llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest",
                            verbose=True,
                            temperature=0.7,
                            google_api_key=os.getenv("GOOGLE_API_KEY"))
@@ -29,7 +29,7 @@ financial_trading_crew = Crew(
     verbose=True
 )
 
-def run_crew(input_data):
+def run_investment_crew(input_data):
     result = financial_trading_crew.kickoff(inputs=input_data)
     return result
 
@@ -41,4 +41,4 @@ if __name__=='__main__':
     'trading_strategy_preference': 'Day Trading',
     'news_impact_consideration': True
     }
-    print(run_crew(input_data=financial_trading_inputs))
+    print(run_investment_crew(input_data=financial_trading_inputs))
