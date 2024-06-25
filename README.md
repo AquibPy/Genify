@@ -247,6 +247,15 @@ percentage, missing keywords, and profile summary.
   - **Risk Assessment:** The risk management agent evaluates potential risks associated with the trading strategy and suggests mitigation measures.
   - **Execution Planning:** The execution agent develops a detailed plan for executing the trading strategy, considering the assessed risks.
 
+### 26. Agent Doc
+
+- **Route:** `/agent_doc`
+- **Description:** This API endpoint coordinates a team of AI agents to perform comprehensive healthcare diagnosis and treatment recommendations.
+- **Feature:**
+  - **Input Data:** Users can provide input data including gender, age, symptoms, and medical history.
+  - **Diagnosis:** The diagnostician agent analyzes the input data to provide a preliminary diagnosis with possible conditions.
+  - **Treatment Recommendations:** The treatment advisor agent formulates a suitable treatment plan based on the diagnosis and user-provided information.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

@@ -31,6 +31,7 @@ from sendgrid.helpers.mail import Mail
 from uuid import uuid4
 from tech_news_agent.crew import run_crew
 from investment_risk_analyst_agent.crew import run_investment_crew
+from agent_doc.crew import run_doc_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
@@ -836,6 +837,60 @@ async def run_risk_investment_agent(request:Request,stock_selection: str = Form(
             "endpoint": "/investment_risk_agent",
             "input_data" : input_data,
             "Investment_report": report
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=report)
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/agent_doc",description="""
+          This route leverages AI agents to assist doctors in diagnosing medical conditions and 
+          recommending treatment plans based on patient-reported symptoms and medical history. 
+
+          NOTE : Output will take some time as multiple agents are working together.
+          """)
+@limiter.limit("2/30minute")
+async def run_doc_agent(request:Request,gender: str = Form("Male"),
+                                    age : int = Form("28"),
+                                    symptoms: str = Form("fever, cough, headache"),
+                                    medical_history : str = Form("diabetes, hypertension"),
+                                    token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    try:
+        input_data = {"gender": gender,
+                      "risk_tolerance": age,
+                      "symptoms": symptoms,
+                      "medical_history": medical_history
+                      }
+        print(input_data)
+        cache_key = f"agent_doc:{input_data}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
+        report = run_doc_crew(input_data)
+        redis.set(cache_key, report, ex=10)
+        db = MongoDB()
+        payload = {
+            "endpoint": "/agent_doc",
+            "Gender" : gender,
+            "Age" : age,
+            "Symptoms" : symptoms,
+            "Medical History" :  medical_history,
+            "Medical Report": report
         }
         mongo_data = {"Document": payload}
         result = db.insert_data(mongo_data)
