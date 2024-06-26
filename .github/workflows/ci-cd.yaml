@@ -38,6 +38,10 @@ jobs:
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
           echo "TOKEN_SECRET_KEY=${{ secrets.TOKEN_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "SERPER_API_KEY=${{ secrets.SERPER_API_KEY }}" >> $GITHUB_ENV
+          echo "COHERE_API_KEY=${{ secrets.COHERE_API_KEY }}" >> $GITHUB_ENV
+
+
 
       - name: Install dependencies
         run: |
