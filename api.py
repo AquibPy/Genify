@@ -44,7 +44,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-
+from groq import Groq
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
@@ -52,7 +52,7 @@ os.environ["LANGCHAIN_PROJECT"]="genify"
 os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
 
 redis = Redis(host=os.getenv("REDIS_HOST"), port=settings.REDIS_PORT, password=os.getenv("REDIS_PASSWORD"))
-
+client = Groq()
 mongo_client = MongoDB(collection_name=os.getenv("MONGO_COLLECTION_USER"))
 users_collection = mongo_client.collection
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -67,7 +67,7 @@ app.state.limit = limiter
 async def rate_limit_exceeded_handler(request:Request,exc: RateLimitExceeded):
     return JSONResponse(
         status_code= status.HTTP_429_TOO_MANY_REQUESTS,
-        content= {"response": "Limit exceeded, please try again after 2 minute !!!!!!"}
+        content= {"response": "Limit exceeded, please try later !!!!!!"}
     )
 
 templates = Jinja2Templates(directory="templates")
@@ -898,6 +898,42 @@ async def run_doc_agent(request:Request,gender: str = Form("Male"),
         return ResponseText(response=report)
     except Exception as e:
         return {"error": str(e)}
+  
+@app.post("/transcriber", description=
+          """
+          This route can transcribe audio and video files of any format into text.
+          The transcription process uses the OpenAI Whisper model, which is known for its high accuracy and efficiency.
+
+          The OpenAI Whisper model is a state-of-the-art speech recognition system designed to convert spoken language into written text.
+          It leverages advanced machine learning techniques to achieve high accuracy and robustness across various languages, accents, and audio qualities.
+          The Whisper model is part of OpenAI's efforts to provide powerful tools for natural language understanding and generation.
+          """
+          )
+@limiter.limit("5/15minute")
+
+async def transcribe_audio_video(request: Request, file: UploadFile = File(...)):
+    try:
+        file_contents = await file.read()
+        
+        transcription = client.audio.transcriptions.create(
+            file=(file.filename, file_contents),
+            model="whisper-large-v3",
+            prompt="",  # Optiona
+            response_format="json",  # Optional
+            temperature=0,  # Optional
+        )
+        db = MongoDB()
+        payload = {
+            "endpoint": "/transcriber",
+            "transcription": transcription.text
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+
+        return JSONResponse(content={"transcription": transcription.text})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
     
 if __name__ == '__main__':
     import uvicorn

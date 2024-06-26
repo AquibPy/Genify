@@ -256,6 +256,14 @@ percentage, missing keywords, and profile summary.
   - **Diagnosis:** The diagnostician agent analyzes the input data to provide a preliminary diagnosis with possible conditions.
   - **Treatment Recommendations:** The treatment advisor agent formulates a suitable treatment plan based on the diagnosis and user-provided information.
 
+### 27. Audio Video Transcriber
+
+- **Route:** `/transcriber`
+- **Description:** This API endpoint allows users to upload audio or video files to be transcribed into text using the OpenAI Whisper model.
+- **Feature:**
+  - **File Upload:** Users can upload audio or video files in various formats.
+  - **Transcription:** The API uses the OpenAI Whisper model to transcribe the uploaded file into text.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.
