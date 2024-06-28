@@ -264,6 +264,17 @@ percentage, missing keywords, and profile summary.
   - **File Upload:** Users can upload audio or video files in various formats.
   - **Transcription:** The API uses the OpenAI Whisper model to transcribe the uploaded file into text.
 
+### 28. Job Posting Agent
+
+- **Route:** `/job_posting_agent`
+- **Description:** This API endpoint coordinates a team of AI agents to generate a detailed and engaging job posting tailored to the company's culture and values.
+- **Feature:**
+  - **Input Data:** Users can provide input data including company description, company domain, hiring needs, and specific benefits.
+  - **Company Culture and Values Analysis:** The research analyst agent analyzes the company's website and provided description to extract insights on culture, values, and specific needs.
+  - **Role Requirements Identification:** The research analyst agent identifies the key skills, experiences, and qualities the ideal candidate should possess based on the company's needs, projects, competitive landscape, and industry trends.
+  - **Job Posting Drafting:** The job description writer agent uses the insights to create a detailed, engaging, and enticing job posting that aligns with the company's culture and values.
+  - **Review and Editing:** The review and editing specialist agent reviews the job posting for clarity, engagement, grammatical accuracy, and alignment with company values, refining it to ensure perfection.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

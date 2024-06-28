@@ -32,6 +32,7 @@ from uuid import uuid4
 from tech_news_agent.crew import run_crew
 from investment_risk_analyst_agent.crew import run_investment_crew
 from agent_doc.crew import run_doc_crew
+from job_posting_agent.crew import run_job_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
@@ -870,7 +871,7 @@ async def run_doc_agent(request:Request,gender: str = Form("Male"),
 
     try:
         input_data = {"gender": gender,
-                      "risk_tolerance": age,
+                      "age": age,
                       "symptoms": symptoms,
                       "medical_history": medical_history
                       }
@@ -934,6 +935,64 @@ async def transcribe_audio_video(request: Request, file: UploadFile = File(...))
         return JSONResponse(content={"transcription": transcription.text})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/job_posting_agent",description="""
+          This endpoint generates a job posting by analyzing the company's website and description.
+          Multiple agents work together to produce a detailed, engaging, and well-aligned job posting. 
+
+          NOTE : Output will take some time as multiple agents are working together.
+          """)
+@limiter.limit("2/30minute")
+async def run_job_agent(request:Request,
+                        company_description: str = Form("""Microsoft is a global technology company that develops, manufactures, licenses, supports, 
+                                                        and sells a wide range of software products, services, and devices, including the Windows operating system,
+                                                         Office suite, Azure cloud services, and Surface devices."""),
+                        company_domain : str = Form("https://www.microsoft.com/"),
+                        hiring_needs: str = Form("Data Scientist"),
+                        specific_benefits : str = Form("work from home, medical insurance, generous parental leave, on-site fitness centers, and stock purchase plan"),
+                        token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    try:
+        input_data = {"company_description": company_description,
+                      "company_domain": company_domain,
+                      "hiring_needs": hiring_needs,
+                      "specific_benefits": specific_benefits
+                      }
+        print(input_data)
+        cache_key = f"job_posting_agent:{input_data}"
+        cached_response = redis.get(cache_key)
+        if cached_response:
+            print("Retrieving response from Redis cache")
+            return ResponseText(response=cached_response.decode("utf-8"))
+
+        jd = run_job_crew(input_data)
+        redis.set(cache_key, jd, ex=10)
+        db = MongoDB()
+        payload = {
+            "endpoint": "/job_posting_agent",
+            "Company Description" : company_description,
+            "Company Domain" : company_domain,
+            "Hiring Needs" : hiring_needs,
+            "Specific Benefits" :  specific_benefits,
+            "Job Description": jd
+        }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=jd)
+    except Exception as e:
+        return {"error": str(e)}
+
     
 if __name__ == '__main__':
     import uvicorn
