@@ -275,6 +275,23 @@ percentage, missing keywords, and profile summary.
   - **Job Posting Drafting:** The job description writer agent uses the insights to create a detailed, engaging, and enticing job posting that aligns with the company's culture and values.
   - **Review and Editing:** The review and editing specialist agent reviews the job posting for clarity, engagement, grammatical accuracy, and alignment with company values, refining it to ensure perfection.
 
+### 29. ML Assistant Agent
+
+- **Route:** `/ml_assistant`
+- **Description:** This endpoint coordinates a team of AI agents to process an uploaded CSV file and a user-defined machine learning problem description. It aims to provide a clear problem definition, assess the data quality, recommend suitable machine learning models, and generate starter Python code for the project.
+- **Features:**
+  - **Input Data:**
+    - **CSV File:** Users can upload a CSV file containing the dataset.
+    - **User Question:** Users provide a detailed description of their machine learning problem.
+  - **Problem Definition:**
+    - The problem definition agent clarifies and defines the machine learning problem, identifying the type of problem (e.g., classification, regression) and any specific requirements.
+  - **Data Assessment:**
+    - The data assessment agent evaluates the quality and suitability of the provided data and suggests preprocessing or augmentation steps if necessary.
+  - **Model Recommendation:**
+    - The model recommendation agent suggests suitable machine learning models based on the problem definition and data assessment, providing reasons for each recommendation.
+  - **Starter Code Generation:**
+    - The starter code generator agent produces starter Python code for the project, including data loading, model definition, and a basic training loop based on the findings from the problem definition, data assessment, and model recommendation.
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

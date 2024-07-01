@@ -33,6 +33,7 @@ from agents.tech_news_agent.crew import run_crew
 from agents.investment_risk_analyst_agent.crew import run_investment_crew
 from agents.agent_doc.crew import run_doc_crew
 from agents.job_posting_agent.crew import run_job_crew
+from agents.ml_assistant.crew import run_ml_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
@@ -992,7 +993,56 @@ async def run_job_agent(request:Request,
         return ResponseText(response=jd)
     except Exception as e:
         return {"error": str(e)}
+    
+@app.post("/ml_assistant",description="""
+          Upload a CSV file and describe your machine learning problem.
+          The API will process the file and input to provide problem definition, data assessment, model recommendation, and starter code.
 
+          NOTE: In model input default is llama3-70b-8192 but you can choose mixtral-8x7b-32768, gemma-7b-it and llama3-8b-8192."
+          """)
+async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),model: str = Form("llama3-70b-8192"),token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.' + file.filename.split('.')[-1]) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            file_location = tmp.name
+    except Exception as e:
+        return JSONResponse(content={"error": f"Error handling uploaded file: {e}"}, status_code=400)
+    finally:
+        file.file.close()
+
+    
+    try:
+        output = run_ml_crew(file_location, user_question,model=model)
+        os.remove(file_location)
+
+        if "error" in output:
+            return JSONResponse(content=output, status_code=400)
+        
+        db = MongoDB()
+        payload = {
+                "endpoint": "/ml_assistant",
+                "propmt" : user_question,
+                "Model" : model,
+                "Output" : output
+            }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=output)
+
+    except Exception as e:
+        return {"error": str(e)}
     
 if __name__ == '__main__':
     import uvicorn
