@@ -1,6 +1,6 @@
 from crewai import Task
-from investment_risk_analyst_agent.tools import search_tool,scrape_tool
-from investment_risk_analyst_agent.agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
+from .tools import search_tool,scrape_tool
+from .agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
 
 data_analysis_task = Task(
     description=(

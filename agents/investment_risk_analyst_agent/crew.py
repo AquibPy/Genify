@@ -4,8 +4,8 @@ load_dotenv()
 from langchain_google_genai import ChatGoogleGenerativeAI
 # import settings
 import os
-from investment_risk_analyst_agent.agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
-from investment_risk_analyst_agent.tasks import data_analysis_task,strategy_development_task,risk_assessment_task,execution_planning_task
+from .agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
+from .tasks import data_analysis_task,strategy_development_task,risk_assessment_task,execution_planning_task
 
 llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest",
                            verbose=True,

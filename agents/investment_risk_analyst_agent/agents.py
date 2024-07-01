@@ -1,5 +1,5 @@
 from crewai import Agent
-from investment_risk_analyst_agent.tools import search_tool,scrape_tool
+from .tools import search_tool,scrape_tool
 from dotenv import load_dotenv
 load_dotenv()
 from langchain_google_genai import ChatGoogleGenerativeAI

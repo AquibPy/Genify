@@ -29,10 +29,10 @@ from models import UserCreate, ResponseText
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from uuid import uuid4
-from tech_news_agent.crew import run_crew
-from investment_risk_analyst_agent.crew import run_investment_crew
-from agent_doc.crew import run_doc_crew
-from job_posting_agent.crew import run_job_crew
+from agents.tech_news_agent.crew import run_crew
+from agents.investment_risk_analyst_agent.crew import run_investment_crew
+from agents.agent_doc.crew import run_doc_crew
+from agents.job_posting_agent.crew import run_job_crew
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
