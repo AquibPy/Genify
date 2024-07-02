@@ -51,7 +51,7 @@ class MLAgents():
 
     def starter_code_agent(self):
         return Agent(
-    role='Starter_Code_Generator_Agent',
+        role='Starter_Code_Generator_Agent',
         goal="""generate starter Python code for the project, including data loading, 
                 model definition, and a basic training loop, based on findings from the problem definitions,
                 data assessment and model recommendation""",
@@ -59,5 +59,20 @@ class MLAgents():
                 can customize for their projects. Your goal is to give users a head start in their coding efforts.""",
         verbose=True,
         allow_delegation=False,
-        llm=self.llm,
-        )
+        llm=self.llm
+                )
+    
+    def summarization_agent(self):
+        return Agent(
+            role='Summarization_Agent',
+            goal="""Summarize findings from each of the previous steps of the ML discovery process.
+            Include all findings from the problem definitions, data assessment and model recommendation 
+            and all code provided from the starter code generator.
+            """,
+            backstory="""You are a seasoned data scientist, able to break down machine learning problems for
+            less experienced practitioners, provide valuable insight into the problem and why certain ML models
+            are appropriate, and write good, simple code to help get started on solving the problem.
+            """,
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm)

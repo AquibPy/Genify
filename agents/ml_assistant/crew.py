@@ -17,11 +17,13 @@ def run_ml_crew(file_path, user_question, model="llama3-70b-8192"):
     data_assessment_agent = agents.data_assessment_agent()
     model_recommendation_agent = agents.model_recommendation_agent()
     starter_code_agent = agents.starter_code_agent()
+    summarize_agent = agents.summarization_agent()
 
     task_define_problem = tasks.task_define_problem(problem_definition_agent)
     task_assess_data = tasks.task_assess_data(data_assessment_agent)
     task_recommend_model = tasks.task_recommend_model(model_recommendation_agent)
     task_generate_code = tasks.task_generate_code(starter_code_agent)
+    task_summarize =  tasks.task_summarize(summarize_agent)
 
     # Format the input data for agents
     input_data = {
@@ -32,8 +34,8 @@ def run_ml_crew(file_path, user_question, model="llama3-70b-8192"):
 
     # Initialize and run the crew
     ml_crew = Crew(
-        agents=[problem_definition_agent, data_assessment_agent, model_recommendation_agent, starter_code_agent],
-        tasks=[task_define_problem, task_assess_data, task_recommend_model, task_generate_code],
+        agents=[problem_definition_agent, data_assessment_agent, model_recommendation_agent, starter_code_agent,summarize_agent],
+        tasks=[task_define_problem, task_assess_data, task_recommend_model, task_generate_code,task_summarize],
         verbose=True
     )
 
