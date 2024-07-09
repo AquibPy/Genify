@@ -911,7 +911,7 @@ async def run_doc_agent(request:Request,gender: str = Form("Male"),
           The Whisper model is part of OpenAI's efforts to provide powerful tools for natural language understanding and generation.
           """
           )
-@limiter.limit("5/15minute")
+@limiter.limit("15/3minute")
 
 async def transcribe_audio_video(request: Request, file: UploadFile = File(...)):
     try:
