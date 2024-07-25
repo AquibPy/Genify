@@ -295,7 +295,7 @@
     <h1>Chat with LLAMA 3 🦙🦙🦙</h1>
     <div id="result"></div>
     <div id="message-container">
-      <input type="text" id="message" placeholder="Type your message here" />
+      <input type="text" id="message" placeholder="Type your message here" onkeydown="if(event.key === 'Enter') document.querySelector('.send-button').click();">
       <button onclick="sendMessage()" class="send-button">Send Message</button>
     </div>
     <div id="mode-switch">
@@ -307,6 +307,8 @@
       <select id="model-select" onchange="updateSelectedModel()">
         <option value="llama3-70b-8192">LLAMA 3-70b 🦙🦙🦙</option>
         <option value="llama3-8b-8192">LLAMA 3-8b 🦙🦙🦙</option>
+        <option value="llama-3.1-70b-versatile">LLAMA 3.1-70b 🦙🦙🦙</option>
+        <option value="llama-3.1-8b-instant">LLAMA 3.1-8b 🦙🦙🦙</option>
         <option value="mixtral-8x7b-32768">MIXTRAL 8x7b</option>
         <option value="gemma2-9b-it">GEMMA 2 9b-it</option>
         <option value="gemma-7b-it">GEMMA 7b-it</option>
@@ -458,6 +460,8 @@
       var modelOptions = {
         "llama3-70b-8192": "LLAMA 3-70b 🦙🦙🦙",
         "llama3-8b-8192": "LLAMA 3-8b 🦙🦙🦙",
+        "llama-3.1-8b-instant":"LLAMA 3.1 8b",
+        "llama-3.1-70b-versatile":"LLAMA 3.1 70-b",
         "mixtral-8x7b-32768": "MIXTRAL 8x7b",
         "gemma2-9b-it": "GEMMA 2 9b-it",
         "gemma-7b-it": "GEMMA 7b-it"

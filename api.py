@@ -407,10 +407,10 @@ async def pdf_questions_generator(pdf: UploadFile = File(...)):
         return ResponseText(response=f"Error: {str(e)}")
     
 @app.post("/chat_groq", description= """This route uses groq for faster response using Language Processing Unit(LPU).
-          \n In model input default is gemma2-9b-it but you can choose gemma-7b-it, mixtral-8x7b-32768 , llama3-70b-8192 and llama3-8b-8192.
+          \n In model input default is llama-3.1-70b-versatile but you can choose gemma2-9b-it, gemma-7b-it, mixtral-8x7b-32768, llama-3.1-8b-instant, llama3-70b-8192 and llama3-8b-8192.
           \n conversational_memory_length ranges from 1 to 10. It keeps a list of the interactions of the conversation over time.
           It only uses the last K interactions """)
-async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('gemma2-9b-it'), 
+async def groq_chatbot(question: str = Form(...), model: Optional[str] = Form('llama-3.1-70b-versatile'), 
     conversational_memory_length: Optional[int] = Form(5)):
     try:
         memory=ConversationBufferWindowMemory(k=conversational_memory_length)
@@ -462,9 +462,9 @@ async def groq_text_summary(input_text: str = Form(...)):
         return ResponseText(response=f"Error: {str(e)}")
     
 @app.post("/RAG_PDF_Groq",description="The endpoint uses the pdf and give the answer based on the prompt provided using groq\
-          In model input default is mixtral-8x7b-32768 but you can choose gemma-7b-it, gemma2-9b-it, llama3-70b-8192 and llama3-8b-8192.")
+          In model input default is llama-3.1-70b-versatile but you can choose mixtral-8x7b-32768, gemma-7b-it, gemma2-9b-it, llama-3.1-8b-instant, llama3-70b-8192 and llama3-8b-8192.")
 async def talk_pdf_groq(pdf: UploadFile = File(...),prompt: str = Form(...),
-                       model: Optional[str] = Form('llama3-70b-8192')):
+                       model: Optional[str] = Form('llama-3.1-70b-versatile')):
     try:
         rag_chain = groq_pdf(pdf.file,model)
         out = rag_chain.invoke(prompt)
@@ -558,9 +558,9 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
         return ResponseText(response=f"Error: {str(e)}")
 
 @app.post("/advance_rag_llama_index",description="The endpoint build a Router that can choose whether to do vector search or summarization\
-          In model input default is llama3-70b-8192 but you can choose mixtral-8x7b-32768, gemma-7b-it, gemma2-9b-it and llama3-8b-8192.")
+          In model input default is gemma2-9b-it but you can choose mixtral-8x7b-32768, gemma-7b-it, llama-3.1-70b-versatile, llama-3.1-8b-instant, llama3-70b-8192  and llama3-8b-8192.")
 async def llama_index_rag(pdf: UploadFile = File(...),question: str = Form(...),
-                       model: Optional[str] = Form('llama3-70b-8192')):
+                       model: Optional[str] = Form('gemma2-9b-it')):
     try:
         rag_output = advance_rag_llama_index(pdf,model,question)
         db = MongoDB()
@@ -998,9 +998,9 @@ async def run_job_agent(request:Request,
           Upload a CSV file and describe your machine learning problem.
           The API will process the file and input to provide problem definition, data assessment, model recommendation, and starter code.
 
-          NOTE: In model input default is gemma2-9b-it but you can choose mixtral-8x7b-32768, gemma-7b-it, llama3-70b-8192 and llama3-8b-8192."
+          NOTE: In model input default is llama-3.1-70b-versatile but you can choose mixtral-8x7b-32768, gemma2-9b-it, gemma-7b-it, llama-3.1-8b-instant, llama3-70b-8192 and llama3-8b-8192."
           """)
-async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),model: str = Form("gemma2-9b-it"),token: str = Depends(oauth2_scheme)):
+async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),model: str = Form("llama-3.1-70b-versatile"),token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
         email = payload.get("sub")
