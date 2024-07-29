@@ -1,4 +1,3 @@
-GEMINI_PRO = "gemini-pro"
 GEMINI_PRO_1_5 = "gemini-1.5-pro-latest"
 GEMINI_FLASH = "gemini-1.5-flash-latest"
 GOOGLE_EMBEDDING = "models/embedding-001"

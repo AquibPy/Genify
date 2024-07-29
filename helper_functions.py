@@ -53,7 +53,7 @@ embeddings = HuggingFaceInferenceAPIEmbeddings(
 def get_gemini_response(input, image_file, prompt):
     try:
         print(prompt,input)
-        model = genai.GenerativeModel("gemini-pro-vision")
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
     
         response = model.generate_content([input, image_file[0], prompt])
         return response.text
@@ -62,7 +62,7 @@ def get_gemini_response(input, image_file, prompt):
 
 def get_gemini_response_health(image_file, prompt):
     try:
-        model = genai.GenerativeModel("gemini-pro-vision")
+        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
     
         response = model.generate_content([image_file[0], prompt])
         return response.text
