@@ -3,7 +3,7 @@ langchain_community
 google-generativeai
 langchain-google-genai
 faiss-cpu
-fastapi
+fastapi[standard]
 uvicorn
 pydantic
 python-dotenv

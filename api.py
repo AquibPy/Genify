@@ -1032,7 +1032,7 @@ async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),mo
         db = MongoDB()
         payload = {
                 "endpoint": "/ml_assistant",
-                "propmt" : user_question,
+                "prompt" : user_question,
                 "Model" : model,
                 "Output" : output
             }

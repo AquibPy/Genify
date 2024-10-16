@@ -6,9 +6,8 @@ load_dotenv()
 
 class MLAgents():
     def __init__(self,model) -> None:
-        self.llm = ChatGroq(
-            api_key=os.environ['GROQ_API_KEY'],
-            model_name=model)
+        os.environ["GROQ_API_KEY"] = os.environ.get('GROQ_API_KEY')
+        self.llm = f"groq/{model}"
     
     def problem_definition_agent(self):
         return Agent(
