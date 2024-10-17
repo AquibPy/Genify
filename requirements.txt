@@ -6,7 +6,7 @@ faiss-cpu
 fastapi[standard]
 uvicorn
 pydantic
-# python-dotenv
+python-dotenv
 python-multipart
 PyPDF2
 unstructured
@@ -18,15 +18,15 @@ pytest
 groq
 langchain-groq
 jinja2
-# tiktoken
+tiktoken
 redis
 python-jose
 sendgrid
 llama-index-llms-groq
 llama-index-embeddings-langchain
-# grpcio
+grpcio
 crewai
 crewai-tools
-# proto-plus
+proto-plus
 langchain-cohere
 slowapi
