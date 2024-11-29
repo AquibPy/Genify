@@ -76,7 +76,7 @@ def create_vector_db():
     vectordb.save_local(settings.VECTORDB_PATH)
 
 def get_qa_chain():
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.2)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH_8B, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.2)
     vectordb = FAISS.load_local(settings.VECTORDB_PATH,google_embedding,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
@@ -93,7 +93,7 @@ def get_qa_chain():
     return chain
 
 def get_url_doc_qa(url,doc):
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH_8B, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     if url:
         loader = WebBaseLoader(url)
         data = loader.load()
@@ -135,7 +135,7 @@ def get_gemini_pdf(pdf):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
     vector_store = FAISS.from_texts(chunks, embedding=google_embedding)
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH_8B, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     retriever = vector_store.as_retriever(score_threshold=0.7)
     PROMPT = PromptTemplate(
         template=settings.prompt_pdf, input_variables=["context", "question"]
@@ -188,7 +188,7 @@ def questions_generator(doc):
     # splitter_ans_gen = TokenTextSplitter(chunk_size = 1000,chunk_overlap = 100)
     # document_answer_gen = splitter_ans_gen.split_documents(document_ques_gen)
 
-    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= settings.GEMINI_FLASH,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= settings.GEMINI_FLASH_8B,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     PROMPT_QUESTIONS = PromptTemplate(template=settings.question_prompt_template, input_variables=["text"])
     REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=settings.question_refine_template)
     ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 

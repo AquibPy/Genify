@@ -47,6 +47,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
@@ -314,7 +317,7 @@ async def blogs(topic: str = Form("Generative AI")):
             print("Retrieving response from Redis cache")
             return ResponseText(response=cached_response.decode("utf-8"))
 
-        model = genai.GenerativeModel(settings.GEMINI_FLASH)
+        model = genai.GenerativeModel(settings.GEMINI_FLASH_8B)
         blog_prompt = f""" You are expert in blog writing. Write a blog on the topic {topic}. Use a friendly and informative tone, and include examples and tips to encourage readers to get started with the topic provided. """
         response = model.generate_content(blog_prompt)
         redis.set(cache_key, response.text, ex=60)
@@ -523,7 +526,7 @@ async def ats(resume_pdf: UploadFile = File(...), job_description: str = Form(..
             return ResponseText(response=cached_response.decode("utf-8"))
 
         text = extraxt_pdf_text(resume_pdf.file)
-        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_FLASH_8B)
         ats_prompt = f"""
                 Hey Act Like a skilled or very experienced ATS (Application Tracking System)
                 with a deep understanding of the tech field, software engineering, data science, data analysis,

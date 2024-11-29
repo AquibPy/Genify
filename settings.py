@@ -1,11 +1,12 @@
 GEMINI_PRO_1_5 = "gemini-1.5-pro-latest"
 GEMINI_FLASH = "gemini-1.5-flash-latest"
+GEMINI_FLASH_8B = "gemini-1.5-flash-8b"
 GOOGLE_EMBEDDING = "models/embedding-001"
 FAQ_FILE = 'data/faqs.csv'
 EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
-REDIS_PORT = 13653
+REDIS_PORT = 18804
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 qa_prompt = """
