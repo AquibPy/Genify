@@ -31,6 +31,7 @@ from llama_index import core
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import RouterQueryEngine
 import shutil
+import base64
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -352,6 +353,9 @@ def extract_video_id(url):
             video_id = match.group(0)
             break
     return video_id
+
+def encode_image(image_data: bytes) -> str:
+    return base64.b64encode(image_data).decode("utf-8")
 
 if __name__ == "__main__":
     create_vector_db()

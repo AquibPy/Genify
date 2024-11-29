@@ -292,6 +292,19 @@ percentage, missing keywords, and profile summary.
   - **Starter Code Generation:**
     - The starter code generator agent produces starter Python code for the project, including data loading, model definition, and a basic training loop based on the findings from the problem definition, data assessment, and model recommendation.
 
+### 30. Agrilens
+
+### AgriLens Image Analysis API
+
+- **Route:** `/agrilens`  
+- **Description:** This API endpoint allows users to upload agricultural images and receive AI-powered insights into crops, pests, diseases, and overall health assessment.
+The analysis also includes actionable recommendations for improving agricultural practices and yields.
+- **Features:**
+  - **Image Upload:** Users can upload agricultural images in JPG, JPEG, or PNG formats.  
+  - **Advanced Detection:** Identifies crops, pests, diseases, and farming equipment within the uploaded image.  
+  - **Health Assessment:** Evaluates crop health, identifying stress factors or signs of disease.  
+  - **Smart Recommendations:** Provides actionable insights for enhancing agricultural productivity, such as fertilizer, pesticide, or irrigation advice.  
+
 ## Usage
 
 Each endpoint accepts specific parameters as described in the respective endpoint documentation. Users can make POST requests to these endpoints with the required parameters to perform the desired tasks.

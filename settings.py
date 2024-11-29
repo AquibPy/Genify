@@ -155,3 +155,14 @@ You are a professional note-taker with expertise in distilling key insights from
 
 Make sure the notes are well-structured and formatted as bullet points. The total length should not exceed 1000 words. Please summarize the following text:
 """
+
+AGRILENS_DEFAULT_PROMPT = """
+Analyze the uploaded image, which is related to agriculture.
+Identify the key elements present in the image, such as crops, soil, pests, diseases, farming equipment, or other agricultural features.
+Provide the following details:
+1. Description: A brief overview of what is visible in the image.
+2. Detailed Identification: Name the type of crop, pest, disease, or farming equipment, if applicable.
+3. Condition Assessment: If the image contains crops, assess their health (e.g., healthy, stressed, diseased). If there are visible pests or diseases, specify their type and possible impact.
+4. Recommendations: Suggest actionable insights to improve the situation, such as applying fertilizers, pesticides, irrigation, or other agricultural practices.
+5. Additional Observations: Any other insights or anomalies you notice in the image relevant to agriculture.
+"""

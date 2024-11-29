@@ -15,7 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from mongo import MongoDB
 from helper_functions import get_qa_chain,get_gemini_response,get_url_doc_qa,extract_transcript_details,\
     get_gemini_response_health,get_gemini_pdf,read_sql_query,remove_substrings,questions_generator,groq_pdf,\
-    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index,parse_sql_response, extract_video_id
+    summarize_audio,chatbot_send_message,extraxt_pdf_text,advance_rag_llama_index,parse_sql_response, extract_video_id,\
+    encode_image
 from langchain_groq import ChatGroq
 from langchain.chains.conversation.base import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -47,6 +48,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from groq import Groq
+import openai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -55,6 +57,11 @@ os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"]="genify"
 os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
+
+openai_compatible_client = openai.OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY")
+)
 
 redis = Redis(host=os.getenv("REDIS_HOST"), port=settings.REDIS_PORT, password=os.getenv("REDIS_PASSWORD"))
 client = Groq()
@@ -1046,6 +1053,62 @@ async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),mo
 
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/agrilens")
+async def analyze_image(file: UploadFile,custom_prompt: str = Form(""),token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        user = users_collection.find_one({"email": email})
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
+
+    if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPG, JPEG, and PNG are supported.")
+
+    image_data = await file.read()
+    base64_image = encode_image(image_data)
+
+    final_prompt = custom_prompt if custom_prompt and custom_prompt.strip() else settings.AGRILENS_DEFAULT_PROMPT
+
+    try:
+        chat_completion = openai_compatible_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            },
+                        },
+                        {"type": "text", "text": final_prompt},
+                    ],
+                }
+            ],
+            model="llama-3.2-90b-vision-preview"
+        )
+
+        response_content = chat_completion.choices[0].message.content
+        db = MongoDB()
+        payload = {
+                "endpoint": "/agrilens",
+                "custom_prompt" : final_prompt,
+                "Output" : response_content
+            }
+        mongo_data = {"Document": payload}
+        result = db.insert_data(mongo_data)
+        print(result)
+        return ResponseText(response=response_content)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during analysis: {e}")
     
 if __name__ == '__main__':
     import uvicorn
