@@ -294,8 +294,6 @@ percentage, missing keywords, and profile summary.
 
 ### 30. Agrilens
 
-### AgriLens Image Analysis API
-
 - **Route:** `/agrilens`  
 - **Description:** This API endpoint allows users to upload agricultural images and receive AI-powered insights into crops, pests, diseases, and overall health assessment.
 The analysis also includes actionable recommendations for improving agricultural practices and yields.
