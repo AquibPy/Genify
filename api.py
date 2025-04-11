@@ -30,19 +30,18 @@ from models import UserCreate, ResponseText
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from uuid import uuid4
-from agents.tech_news_agent.crew import run_crew
-from agents.investment_risk_analyst_agent.crew import run_investment_crew
-from agents.agent_doc.crew import run_doc_crew
-from agents.job_posting_agent.crew import run_job_crew
-from agents.ml_assistant.crew import run_ml_crew
-from langchain.agents import AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
-from langchain_cohere.chat_models import ChatCohere
-from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_community.agent_toolkits import SQLDatabaseToolkit
-import tempfile
-import shutil
+# from agents.tech_news_agent.crew import run_crew
+# from agents.investment_risk_analyst_agent.crew import run_investment_crew
+# from agents.agent_doc.crew import run_doc_crew
+# from agents.job_posting_agent.crew import run_job_crew
+# from agents.ml_assistant.crew import run_ml_crew
+# from langchain.agents import AgentExecutor
+# from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
+# from langchain_cohere.chat_models import ChatCohere
+# from langchain_community.utilities.sql_database import SQLDatabase
+# from langchain_community.agent_toolkits import SQLDatabaseToolkit
+# import tempfile
+# import shutil
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -664,88 +663,6 @@ async def get_data(endpoint_name: str, token: str = Depends(oauth2_scheme)):
 
     return data
 
-@app.post("/news_agent",description="""
-          This endpoint leverages AI agents to conduct research and generate articles on various tech topics. 
-          The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories
-          """)
-async def run_news_agent(topic: str = Form("AI in healthcare")):
-    try:
-        cache_key = f"news_agent:{topic}"
-        cached_response = redis.get(cache_key)
-        if cached_response:
-            print("Retrieving response from Redis cache")
-            return ResponseText(response=cached_response.decode("utf-8"))
-
-        output = run_crew(topic=topic)
-        redis.set(cache_key, output, ex=10)
-        db = MongoDB()
-        payload = {
-            "endpoint": "/news_agent",
-            "topic" : topic,
-            "output": output
-        }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-        return ResponseText(response=output)
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.post("/query_db",description="""
-          The Query Database endpoint provides a service for interacting with SQL databases using a Cohere ReAct Agent. 
-          It leverages Langchain's existing SQLDBToolkit to answer questions and perform queries over SQL database.
-          """)
-async def query_db(database: UploadFile = File(...), prompt: str = Form(...)):
-    try: 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.' + database.filename.split('.')[-1]) as temp_file:
-            shutil.copyfileobj(database.file, temp_file)
-            db_path = temp_file.name
-
-        llm = ChatCohere(model="command-r-plus", temperature=0.1, verbose=True,cohere_api_key=os.getenv("COHERE_API_KEY"))
-        db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
-        toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-        context = toolkit.get_context()
-        tools = toolkit.get_tools()
-        chat_prompt = ChatPromptTemplate.from_template("{input}")
-
-        agent = create_cohere_react_agent(
-            llm=llm,
-            tools=tools,
-            prompt=chat_prompt
-        )
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=True,
-            return_intermediate_steps=False,
-        )
-
-        preamble = settings.QUERY_DB_PROMPT.format(schema_info=context)
-        
-        out = agent_executor.invoke({
-           "input": prompt,
-           "preamble": preamble
-        })
-
-        output  = parse_sql_response(out["output"])
-        db = MongoDB()
-        payload = {
-            "endpoint": "/query_db",
-            "input": prompt,
-            "output": output
-        }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-
-        return ResponseText(response=output)
-
-    except Exception as e:
-        raise Exception(f"Error handling uploaded file: {e}")
-
-    finally:
-        database.file.close()
-
 @app.post("/MediGem",description="Medical Diagnosis AI Assistant")
 async def medigem(image_file: UploadFile = File(...)):
     
@@ -806,111 +723,6 @@ async def process_video(request: Request, video_url: str = Form(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/investment_risk_agent",description="""
-          This route implements an investment risk analyst agent system using a crew of AI agents. 
-          Each agent is responsible for different aspects of financial trading and risk management, 
-          working together to analyze data, develop trading strategies, assess risks, and plan executions.
-
-          NOTE : Output will take more than 5 minutes as multiple agents are working together.
-          """)
-@limiter.limit("2/30minute")
-async def run_risk_investment_agent(request:Request,stock_selection: str = Form("AAPL"),
-                                    risk_tolerance : str = Form("Medium"),
-                                    trading_strategy_preference: str = Form("Day Trading"),
-                                    token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        user = users_collection.find_one({"email": email})
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    try:
-        input_data = {"stock_selection": stock_selection,
-                      "risk_tolerance": risk_tolerance,
-                      "trading_strategy_preference": trading_strategy_preference,
-                      "news_impact_consideration": True
-                      }
-        print(input_data)
-        cache_key = f"investment_risk_agent:{input_data}"
-        cached_response = redis.get(cache_key)
-        if cached_response:
-            print("Retrieving response from Redis cache")
-            return ResponseText(response=cached_response.decode("utf-8"))
-
-        report = run_investment_crew(input_data)
-        redis.set(cache_key, report, ex=10)
-        db = MongoDB()
-        payload = {
-            "endpoint": "/investment_risk_agent",
-            "input_data" : input_data,
-            "Investment_report": report
-        }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-        return ResponseText(response=report)
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.post("/agent_doc",description="""
-          This route leverages AI agents to assist doctors in diagnosing medical conditions and 
-          recommending treatment plans based on patient-reported symptoms and medical history. 
-
-          NOTE : Output will take some time as multiple agents are working together.
-          """)
-@limiter.limit("2/30minute")
-async def run_doc_agent(request:Request,gender: str = Form("Male"),
-                                    age : int = Form("28"),
-                                    symptoms: str = Form("fever, cough, headache"),
-                                    medical_history : str = Form("diabetes, hypertension"),
-                                    token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        user = users_collection.find_one({"email": email})
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    try:
-        input_data = {"gender": gender,
-                      "age": age,
-                      "symptoms": symptoms,
-                      "medical_history": medical_history
-                      }
-        print(input_data)
-        cache_key = f"agent_doc:{input_data}"
-        cached_response = redis.get(cache_key)
-        if cached_response:
-            print("Retrieving response from Redis cache")
-            return ResponseText(response=cached_response.decode("utf-8"))
-
-        report = run_doc_crew(input_data)
-        redis.set(cache_key, report, ex=10)
-        db = MongoDB()
-        payload = {
-            "endpoint": "/agent_doc",
-            "Gender" : gender,
-            "Age" : age,
-            "Symptoms" : symptoms,
-            "Medical History" :  medical_history,
-            "Medical Report": report
-        }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-        return ResponseText(response=report)
-    except Exception as e:
-        return {"error": str(e)}
-  
 @app.post("/transcriber", description=
           """
           This route can transcribe audio and video files of any format into text.
@@ -946,113 +758,6 @@ async def transcribe_audio_video(request: Request, file: UploadFile = File(...))
         return JSONResponse(content={"transcription": transcription.text})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-@app.post("/job_posting_agent",description="""
-          This endpoint generates a job posting by analyzing the company's website and description.
-          Multiple agents work together to produce a detailed, engaging, and well-aligned job posting. 
-
-          NOTE : Output will take some time as multiple agents are working together.
-          """)
-@limiter.limit("2/30minute")
-async def run_job_agent(request:Request,
-                        company_description: str = Form("""Microsoft is a global technology company that develops, manufactures, licenses, supports, 
-                                                        and sells a wide range of software products, services, and devices, including the Windows operating system,
-                                                         Office suite, Azure cloud services, and Surface devices."""),
-                        company_domain : str = Form("https://www.microsoft.com/"),
-                        hiring_needs: str = Form("Data Scientist"),
-                        specific_benefits : str = Form("work from home, medical insurance, generous parental leave, on-site fitness centers, and stock purchase plan"),
-                        token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        user = users_collection.find_one({"email": email})
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    try:
-        input_data = {"company_description": company_description,
-                      "company_domain": company_domain,
-                      "hiring_needs": hiring_needs,
-                      "specific_benefits": specific_benefits
-                      }
-        print(input_data)
-        cache_key = f"job_posting_agent:{input_data}"
-        cached_response = redis.get(cache_key)
-        if cached_response:
-            print("Retrieving response from Redis cache")
-            return ResponseText(response=cached_response.decode("utf-8"))
-
-        jd = run_job_crew(input_data)
-        redis.set(cache_key, jd, ex=10)
-        db = MongoDB()
-        payload = {
-            "endpoint": "/job_posting_agent",
-            "Company Description" : company_description,
-            "Company Domain" : company_domain,
-            "Hiring Needs" : hiring_needs,
-            "Specific Benefits" :  specific_benefits,
-            "Job Description": jd
-        }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-        return ResponseText(response=jd)
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/ml_assistant",description="""
-          Upload a CSV file and describe your machine learning problem.
-          The API will process the file and input to provide problem definition, data assessment, model recommendation, and starter code.
-
-          NOTE: In model input default is llama-3.1-70b-versatile but you can choose mixtral-8x7b-32768, gemma2-9b-it, gemma-7b-it, llama-3.1-8b-instant, llama3-70b-8192 and llama3-8b-8192."
-          """)
-async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),model: str = Form("llama-3.1-70b-versatile"),token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        user = users_collection.find_one({"email": email})
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.' + file.filename.split('.')[-1]) as tmp:
-            shutil.copyfileobj(file.file, tmp)
-            file_location = tmp.name
-    except Exception as e:
-        return JSONResponse(content={"error": f"Error handling uploaded file: {e}"}, status_code=400)
-    finally:
-        file.file.close()
-
-    
-    try:
-        output = run_ml_crew(file_location, user_question,model=model)
-        os.remove(file_location)
-
-        if "error" in output:
-            return JSONResponse(content=output, status_code=400)
-        
-        db = MongoDB()
-        payload = {
-                "endpoint": "/ml_assistant",
-                "prompt" : user_question,
-                "Model" : model,
-                "Output" : output
-            }
-        mongo_data = {"Document": payload}
-        result = db.insert_data(mongo_data)
-        print(result)
-        return ResponseText(response=output)
-
-    except Exception as e:
-        return {"error": str(e)}
 
 @app.post("/agrilens")
 async def analyze_image(file: UploadFile,custom_prompt: str = Form(""),token: str = Depends(oauth2_scheme)):
@@ -1109,6 +814,302 @@ async def analyze_image(file: UploadFile,custom_prompt: str = Form(""),token: st
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during analysis: {e}")
+
+# @app.post("/news_agent",description="""
+#           This endpoint leverages AI agents to conduct research and generate articles on various tech topics. 
+#           The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories
+#           """)
+# async def run_news_agent(topic: str = Form("AI in healthcare")):
+#     try:
+#         cache_key = f"news_agent:{topic}"
+#         cached_response = redis.get(cache_key)
+#         if cached_response:
+#             print("Retrieving response from Redis cache")
+#             return ResponseText(response=cached_response.decode("utf-8"))
+
+#         output = run_crew(topic=topic)
+#         redis.set(cache_key, output, ex=10)
+#         db = MongoDB()
+#         payload = {
+#             "endpoint": "/news_agent",
+#             "topic" : topic,
+#             "output": output
+#         }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+#         return ResponseText(response=output)
+#     except Exception as e:
+#         return {"error": str(e)}
+
+# @app.post("/query_db",description="""
+#           The Query Database endpoint provides a service for interacting with SQL databases using a Cohere ReAct Agent. 
+#           It leverages Langchain's existing SQLDBToolkit to answer questions and perform queries over SQL database.
+#           """)
+# async def query_db(database: UploadFile = File(...), prompt: str = Form(...)):
+#     try: 
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.' + database.filename.split('.')[-1]) as temp_file:
+#             shutil.copyfileobj(database.file, temp_file)
+#             db_path = temp_file.name
+
+#         llm = ChatCohere(model="command-r-plus", temperature=0.1, verbose=True,cohere_api_key=os.getenv("COHERE_API_KEY"))
+#         db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
+#         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+#         context = toolkit.get_context()
+#         tools = toolkit.get_tools()
+#         chat_prompt = ChatPromptTemplate.from_template("{input}")
+
+#         agent = create_cohere_react_agent(
+#             llm=llm,
+#             tools=tools,
+#             prompt=chat_prompt
+#         )
+#         agent_executor = AgentExecutor(
+#             agent=agent,
+#             tools=tools,
+#             verbose=True,
+#             return_intermediate_steps=False,
+#         )
+
+#         preamble = settings.QUERY_DB_PROMPT.format(schema_info=context)
+        
+#         out = agent_executor.invoke({
+#            "input": prompt,
+#            "preamble": preamble
+#         })
+
+#         output  = parse_sql_response(out["output"])
+#         db = MongoDB()
+#         payload = {
+#             "endpoint": "/query_db",
+#             "input": prompt,
+#             "output": output
+#         }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+
+#         return ResponseText(response=output)
+
+#     except Exception as e:
+#         raise Exception(f"Error handling uploaded file: {e}")
+
+#     finally:
+#         database.file.close()
+
+
+
+# @app.post("/investment_risk_agent",description="""
+#           This route implements an investment risk analyst agent system using a crew of AI agents. 
+#           Each agent is responsible for different aspects of financial trading and risk management, 
+#           working together to analyze data, develop trading strategies, assess risks, and plan executions.
+
+#           NOTE : Output will take more than 5 minutes as multiple agents are working together.
+#           """)
+# @limiter.limit("2/30minute")
+# async def run_risk_investment_agent(request:Request,stock_selection: str = Form("AAPL"),
+#                                     risk_tolerance : str = Form("Medium"),
+#                                     trading_strategy_preference: str = Form("Day Trading"),
+#                                     token: str = Depends(oauth2_scheme)):
+#     try:
+#         payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+#         email = payload.get("sub")
+#         if email is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+#         user = users_collection.find_one({"email": email})
+#         if user is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+#     except JWTError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+#     try:
+#         input_data = {"stock_selection": stock_selection,
+#                       "risk_tolerance": risk_tolerance,
+#                       "trading_strategy_preference": trading_strategy_preference,
+#                       "news_impact_consideration": True
+#                       }
+#         print(input_data)
+#         cache_key = f"investment_risk_agent:{input_data}"
+#         cached_response = redis.get(cache_key)
+#         if cached_response:
+#             print("Retrieving response from Redis cache")
+#             return ResponseText(response=cached_response.decode("utf-8"))
+
+#         report = run_investment_crew(input_data)
+#         redis.set(cache_key, report, ex=10)
+#         db = MongoDB()
+#         payload = {
+#             "endpoint": "/investment_risk_agent",
+#             "input_data" : input_data,
+#             "Investment_report": report
+#         }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+#         return ResponseText(response=report)
+#     except Exception as e:
+#         return {"error": str(e)}
+#
+# @app.post("/agent_doc",description="""
+#           This route leverages AI agents to assist doctors in diagnosing medical conditions and 
+#           recommending treatment plans based on patient-reported symptoms and medical history. 
+
+#           NOTE : Output will take some time as multiple agents are working together.
+#           """)
+# @limiter.limit("2/30minute")
+# async def run_doc_agent(request:Request,gender: str = Form("Male"),
+#                                     age : int = Form("28"),
+#                                     symptoms: str = Form("fever, cough, headache"),
+#                                     medical_history : str = Form("diabetes, hypertension"),
+#                                     token: str = Depends(oauth2_scheme)):
+#     try:
+#         payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+#         email = payload.get("sub")
+#         if email is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+#         user = users_collection.find_one({"email": email})
+#         if user is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+#     except JWTError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+#     try:
+#         input_data = {"gender": gender,
+#                       "age": age,
+#                       "symptoms": symptoms,
+#                       "medical_history": medical_history
+#                       }
+#         print(input_data)
+#         cache_key = f"agent_doc:{input_data}"
+#         cached_response = redis.get(cache_key)
+#         if cached_response:
+#             print("Retrieving response from Redis cache")
+#             return ResponseText(response=cached_response.decode("utf-8"))
+
+#         report = run_doc_crew(input_data)
+#         redis.set(cache_key, report, ex=10)
+#         db = MongoDB()
+#         payload = {
+#             "endpoint": "/agent_doc",
+#             "Gender" : gender,
+#             "Age" : age,
+#             "Symptoms" : symptoms,
+#             "Medical History" :  medical_history,
+#             "Medical Report": report
+#         }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+#         return ResponseText(response=report)
+#     except Exception as e:
+#         return {"error": str(e)}
+
+# @app.post("/job_posting_agent",description="""
+#           This endpoint generates a job posting by analyzing the company's website and description.
+#           Multiple agents work together to produce a detailed, engaging, and well-aligned job posting. 
+
+#           NOTE : Output will take some time as multiple agents are working together.
+#           """)
+# @limiter.limit("2/30minute")
+# async def run_job_agent(request:Request,
+#                         company_description: str = Form("""Microsoft is a global technology company that develops, manufactures, licenses, supports, 
+#                                                         and sells a wide range of software products, services, and devices, including the Windows operating system,
+#                                                          Office suite, Azure cloud services, and Surface devices."""),
+#                         company_domain : str = Form("https://www.microsoft.com/"),
+#                         hiring_needs: str = Form("Data Scientist"),
+#                         specific_benefits : str = Form("work from home, medical insurance, generous parental leave, on-site fitness centers, and stock purchase plan"),
+#                         token: str = Depends(oauth2_scheme)):
+#     try:
+#         payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+#         email = payload.get("sub")
+#         if email is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+#         user = users_collection.find_one({"email": email})
+#         if user is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+#     except JWTError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+#     try:
+#         input_data = {"company_description": company_description,
+#                       "company_domain": company_domain,
+#                       "hiring_needs": hiring_needs,
+#                       "specific_benefits": specific_benefits
+#                       }
+#         print(input_data)
+#         cache_key = f"job_posting_agent:{input_data}"
+#         cached_response = redis.get(cache_key)
+#         if cached_response:
+#             print("Retrieving response from Redis cache")
+#             return ResponseText(response=cached_response.decode("utf-8"))
+
+#         jd = run_job_crew(input_data)
+#         redis.set(cache_key, jd, ex=10)
+#         db = MongoDB()
+#         payload = {
+#             "endpoint": "/job_posting_agent",
+#             "Company Description" : company_description,
+#             "Company Domain" : company_domain,
+#             "Hiring Needs" : hiring_needs,
+#             "Specific Benefits" :  specific_benefits,
+#             "Job Description": jd
+#         }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+#         return ResponseText(response=jd)
+#     except Exception as e:
+#         return {"error": str(e)}
+#    
+# @app.post("/ml_assistant",description="""
+#           Upload a CSV file and describe your machine learning problem.
+#           The API will process the file and input to provide problem definition, data assessment, model recommendation, and starter code.
+
+#           NOTE: In model input default is llama-3.1-70b-versatile but you can choose mixtral-8x7b-32768, gemma2-9b-it, gemma-7b-it, llama-3.1-8b-instant, llama3-70b-8192 and llama3-8b-8192."
+#           """)
+# async def ml_crew(file: UploadFile = File(...),user_question: str = Form(...),model: str = Form("llama-3.1-70b-versatile"),token: str = Depends(oauth2_scheme)):
+#     try:
+#         payload = jwt.decode(token, os.getenv("TOKEN_SECRET_KEY"), algorithms=[settings.ALGORITHM])
+#         email = payload.get("sub")
+#         if email is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+#         user = users_collection.find_one({"email": email})
+#         if user is None:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+#     except JWTError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+#     try:
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.' + file.filename.split('.')[-1]) as tmp:
+#             shutil.copyfileobj(file.file, tmp)
+#             file_location = tmp.name
+#     except Exception as e:
+#         return JSONResponse(content={"error": f"Error handling uploaded file: {e}"}, status_code=400)
+#     finally:
+#         file.file.close()
+
+    
+#     try:
+#         output = run_ml_crew(file_location, user_question,model=model)
+#         os.remove(file_location)
+
+#         if "error" in output:
+#             return JSONResponse(content=output, status_code=400)
+        
+#         db = MongoDB()
+#         payload = {
+#                 "endpoint": "/ml_assistant",
+#                 "prompt" : user_question,
+#                 "Model" : model,
+#                 "Output" : output
+#             }
+#         mongo_data = {"Document": payload}
+#         result = db.insert_data(mongo_data)
+#         print(result)
+#         return ResponseText(response=output)
+
+#     except Exception as e:
+#         return {"error": str(e)}
     
 if __name__ == '__main__':
     import uvicorn

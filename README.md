@@ -192,28 +192,7 @@ percentage, missing keywords, and profile summary.
   - Choose between vector search or summarization for responses.
   - Support for multiple Open Source LLMs models.
 
-### 21. Tech News Agent using Crew ai
-
-- **Route:** `/news_agent`
-- **Description:** This endpoint leverages AI agents to conduct research and generate articles on various tech topics. The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories.
-- **Features:**
-  - Accepts a `topic` parameter specifying the tech topic of interest.
-  - Utilizes caching mechanisms for improved performance by storing and retrieving responses from Redis cache.
-  - Integrates with MongoDB for storing endpoint usage data.
-  - Returns articles and research findings related to the specified tech topic.
-  - Handles exceptions gracefully and returns error messages in JSON format.
-
-### 22. Query Database
-
-- **Route:** `/query_db`
-- **Description:** This API endpoint facilitates querying SQL databases using a Cohere ReAct Agent, integrated with Langchain's SQLDBToolkit.
-- **Feature:**
-  - Upload a `.db` file containing the database to be queried.
-  - Provide a natural language prompt or query to retrieve relevant information
-  from the database.
-  - Utilizes a Cohere ReAct Agent to process user queries and generate responses.
-
-### 23. MediGem: Medical Diagnosis AI Assistant
+### 21. MediGem: Medical Diagnosis AI Assistant
 
 - **Route:** `/MediGem`
 - **Description:** This API endpoint leverages the New Google Gemini AI Model to analyze medical images and identify potential health conditions.
@@ -226,7 +205,7 @@ percentage, missing keywords, and profile summary.
   - **Image Quality Note:** Indicates if certain aspects are 'Unable to be determined based on the provided image.'
   - **Disclaimer:** Includes the disclaimer: "Consult with a Doctor before making any decisions."
 
-### 24. NoteGem: Automated Note-Taking Assistant
+### 22. NoteGem: Automated Note-Taking Assistant
 
 - **Route:** `/NoteGem`
 - **Description:** This API endpoint leverages the Google Gemini AI Model to generate comprehensive notes from YouTube video transcripts.
@@ -236,7 +215,50 @@ percentage, missing keywords, and profile summary.
   - **Error Handling for Transcripts:** If the transcript is not available, it returns a message indicating that the transcript is not available for transcription.
   - **AI Summary Generation:** The AI model generates a structured summary of the transcript focusing on main points, critical information, key takeaways, examples or case studies, quotes, and actionable steps.
 
-### 25. Investment Risk Analyst Agent
+### 23. Audio Video Transcriber
+
+- **Route:** `/transcriber`
+- **Description:** This API endpoint allows users to upload audio or video files to be transcribed into text using the OpenAI Whisper model.
+- **Feature:**
+  - **File Upload:** Users can upload audio or video files in various formats.
+  - **Transcription:** The API uses the OpenAI Whisper model to transcribe the uploaded file into text.
+
+### 24. Agrilens
+
+- **Route:** `/agrilens`  
+- **Description:** This API endpoint allows users to upload agricultural images and receive AI-powered insights into crops, pests, diseases, and overall health assessment.
+The analysis also includes actionable recommendations for improving agricultural practices and yields.
+- **Features:**
+  - **Image Upload:** Users can upload agricultural images in JPG, JPEG, or PNG formats.  
+  - **Advanced Detection:** Identifies crops, pests, diseases, and farming equipment within the uploaded image.  
+  - **Health Assessment:** Evaluates crop health, identifying stress factors or signs of disease.  
+  - **Smart Recommendations:** Provides actionable insights for enhancing agricultural productivity, such as fertilizer, pesticide, or irrigation advice.  
+
+### AGENTS Endpoint
+
+### 1. Tech News Agent using Crew ai
+
+- **Route:** `/news_agent`
+- **Description:** This endpoint leverages AI agents to conduct research and generate articles on various tech topics. The agents are designed to uncover groundbreaking technologies and narrate compelling tech stories.
+- **Features:**
+  - Accepts a `topic` parameter specifying the tech topic of interest.
+  - Utilizes caching mechanisms for improved performance by storing and retrieving responses from Redis cache.
+  - Integrates with MongoDB for storing endpoint usage data.
+  - Returns articles and research findings related to the specified tech topic.
+  - Handles exceptions gracefully and returns error messages in JSON format.
+
+### 2. Query Database
+
+- **Route:** `/query_db`
+- **Description:** This API endpoint facilitates querying SQL databases using a Cohere ReAct Agent, integrated with Langchain's SQLDBToolkit.
+- **Feature:**
+  - Upload a `.db` file containing the database to be queried.
+  - Provide a natural language prompt or query to retrieve relevant information
+  from the database.
+  - Utilizes a Cohere ReAct Agent to process user queries and generate responses.
+
+
+### 3. Investment Risk Analyst Agent
 
 - **Route:** `/investment_risk_agent`
 - **Description:** This API endpoint coordinates a team of AI agents to perform comprehensive investment risk analysis and strategy development.
@@ -247,7 +269,7 @@ percentage, missing keywords, and profile summary.
   - **Risk Assessment:** The risk management agent evaluates potential risks associated with the trading strategy and suggests mitigation measures.
   - **Execution Planning:** The execution agent develops a detailed plan for executing the trading strategy, considering the assessed risks.
 
-### 26. Agent Doc
+### 4. Agent Doc
 
 - **Route:** `/agent_doc`
 - **Description:** This API endpoint coordinates a team of AI agents to perform comprehensive healthcare diagnosis and treatment recommendations.
@@ -256,15 +278,7 @@ percentage, missing keywords, and profile summary.
   - **Diagnosis:** The diagnostician agent analyzes the input data to provide a preliminary diagnosis with possible conditions.
   - **Treatment Recommendations:** The treatment advisor agent formulates a suitable treatment plan based on the diagnosis and user-provided information.
 
-### 27. Audio Video Transcriber
-
-- **Route:** `/transcriber`
-- **Description:** This API endpoint allows users to upload audio or video files to be transcribed into text using the OpenAI Whisper model.
-- **Feature:**
-  - **File Upload:** Users can upload audio or video files in various formats.
-  - **Transcription:** The API uses the OpenAI Whisper model to transcribe the uploaded file into text.
-
-### 28. Job Posting Agent
+### 5. Job Posting Agent
 
 - **Route:** `/job_posting_agent`
 - **Description:** This API endpoint coordinates a team of AI agents to generate a detailed and engaging job posting tailored to the company's culture and values.
@@ -275,7 +289,7 @@ percentage, missing keywords, and profile summary.
   - **Job Posting Drafting:** The job description writer agent uses the insights to create a detailed, engaging, and enticing job posting that aligns with the company's culture and values.
   - **Review and Editing:** The review and editing specialist agent reviews the job posting for clarity, engagement, grammatical accuracy, and alignment with company values, refining it to ensure perfection.
 
-### 29. ML Assistant Agent
+### 6. ML Assistant Agent
 
 - **Route:** `/ml_assistant`
 - **Description:** This endpoint coordinates a team of AI agents to process an uploaded CSV file and a user-defined machine learning problem description. It aims to provide a clear problem definition, assess the data quality, recommend suitable machine learning models, and generate starter Python code for the project.
@@ -291,17 +305,6 @@ percentage, missing keywords, and profile summary.
     - The model recommendation agent suggests suitable machine learning models based on the problem definition and data assessment, providing reasons for each recommendation.
   - **Starter Code Generation:**
     - The starter code generator agent produces starter Python code for the project, including data loading, model definition, and a basic training loop based on the findings from the problem definition, data assessment, and model recommendation.
-
-### 30. Agrilens
-
-- **Route:** `/agrilens`  
-- **Description:** This API endpoint allows users to upload agricultural images and receive AI-powered insights into crops, pests, diseases, and overall health assessment.
-The analysis also includes actionable recommendations for improving agricultural practices and yields.
-- **Features:**
-  - **Image Upload:** Users can upload agricultural images in JPG, JPEG, or PNG formats.  
-  - **Advanced Detection:** Identifies crops, pests, diseases, and farming equipment within the uploaded image.  
-  - **Health Assessment:** Evaluates crop health, identifying stress factors or signs of disease.  
-  - **Smart Recommendations:** Provides actionable insights for enhancing agricultural productivity, such as fertilizer, pesticide, or irrigation advice.  
 
 ## Usage
 
