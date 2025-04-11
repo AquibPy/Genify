@@ -4,252 +4,392 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.css">
     <style>
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #f7d9c4, #f2e3c6);
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #818cf8, #6366f1);
+            --text: #1f2937;
+            --text-light: #4b5563;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe, #c4b5fd);
+            background-size: 400% 400%;
+            z-index: -1;
+            animation: gradientMove 15s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .container {
             max-width: 800px;
-            margin: 50px auto;
+            width: 100%;
+            margin: 20px auto;
             padding: 40px;
-            background-color: #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            animation: fadeIn 1s ease;
+            animation: fadeIn 0.8s ease;
         }
+
         h1 {
             text-align: center;
             margin-bottom: 30px;
             font-weight: 700;
-            color: #7a4d3b;
-            position: relative;
-            animation: slideInDown 1s ease;
-        }
-        h1::before {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background-color: #7a4d3b;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 30px;
-            animation: slideInLeft 1s ease;
-        }
-        label {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #7a4d3b;
-        }
-        input[type="text"] {
-            width: 300px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            transition: border-color 0.3s ease;
-            animation: fadeIn 1s ease;
-        }
-        input[type="text"]:focus {
-            border-color: #7a4d3b;
-            outline: none;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #7a4d3b;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: slideInRight 1s ease;
-        }
-        button:hover {
-            background-color: #6b4335;
-        }
-        button i {
-            margin-right: 10px;
-        }
-        #output {
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 5px;
-            background-color: #f7f7f7;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            animation: fadeIn 1s ease;
-        }
-        #output:hover {
-            transform: scale(1.02);
-        }
-        #output h2 {
-            margin-top: 0;
-            color: #7a4d3b;
+            color: var(--primary);
+            font-size: 2.5rem;
             position: relative;
             padding-bottom: 10px;
         }
-        #output h2::after {
+
+        h1::after {
             content: "";
             position: absolute;
             bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 2px;
-            background-color: #7a4d3b;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--bg-gradient);
+            border-radius: 2px;
         }
-        #output p {
-            margin-bottom: 10px;
-            color: #555;
+
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
         }
+
+        label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: #f9fafb;
+            color: var(--text);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background-color: #ffffff;
+        }
+
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+
+        button {
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .generate-btn {
+            background: var(--bg-gradient);
+            color: white;
+            width: 100%;
+        }
+
+        .generate-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .copy-btn {
+            background-color: #f3f4f6;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .copy-btn:hover {
+            background-color: #e5e7eb;
+        }
+
         .loading {
             display: none;
             justify-content: center;
             align-items: center;
             height: 100px;
+            width: 100%;
         }
+
         .spinner {
-            border: 4px solid rgba(122, 77, 59, 0.2);
-            border-left-color: #7a4d3b;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            border-left-color: var(--primary);
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
+
+        #output {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            background-color: #f9fafb;
+            transition: var(--transition);
+            overflow: hidden;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        #output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #output::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #output::-webkit-scrollbar-thumb {
+            background: #c4b5fd;
+            border-radius: 4px;
+        }
+
+        #output::-webkit-scrollbar-thumb:hover {
+            background: #a78bfa;
+        }
+
+        #output h2 {
+            margin: 0 0 20px 0;
+            color: var(--primary);
+            font-size: 1.8rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        #output p {
+            margin-bottom: 15px;
+            color: var(--text);
+            line-height: 1.8;
+        }
+
         .btn-container {
             display: flex;
             justify-content: center;
+            margin-top: 24px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .follow-container {
             margin-top: 20px;
-            animation: fadeIn 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        .btn-container button {
-            margin: 0 10px;
+
+        .follow-container p {
+            font-size: 0.9rem;
+            color: var(--text-light);
         }
-        .copy-btn {
-            background-color: #6c757d;
-            transition: background-color 0.3s ease;
+
+        .follow-container a {
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            transition: var(--transition);
         }
-        .copy-btn:hover {
-            background-color: #5a6268;
+
+        .follow-container a:hover {
+            transform: scale(1.1);
         }
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                max-width: 100%;
-            }
-            input[type="text"] {
-                width: 100%;
-                max-width: 100%;
-            }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
         }
-        @media (max-width: 400px) {
-            h1 {
-                font-size: 24px;
-            }
-            label {
-                font-size: 1rem;
-            }
-            input[type="text"] {
-                width: 250px;
-            }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
         }
-        @media (max-width: 320px) {
-            h1 {
-                font-size: 20px;
-            }
-            input[type="text"] {
-                width: 200px;
-            }
+
+        footer a:hover {
+            text-decoration: underline;
         }
-        @media (max-width: 280px) {
-            h1 {
-                font-size: 18px;
-            }
-            input[type="text"] {
-                width: 160px;
-            }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: notifyFade 3s ease forwards;
+            z-index: 100;
+            font-weight: 500;
         }
+
+        @keyframes notifyFade {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
         @keyframes fadeIn {
-            0% {
-                opacity: 0;
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
             }
-            100% {
-                opacity: 1;
+            
+            h1 {
+                font-size: 2rem;
             }
         }
-        @keyframes slideInDown {
-            0% {
-                transform: translateY(-100%);
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
             }
-            100% {
-                transform: translateY(0);
+            
+            form {
+                max-width: 100%;
             }
-        }
-        @keyframes slideInLeft {
-            0% {
-                transform: translateX(-100%);
+            
+            input[type="text"] {
+                padding: 12px 16px;
             }
-            100% {
-                transform: translateX(0);
+            
+            button {
+                padding: 12px 16px;
             }
-        }
-        @keyframes slideInRight {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(0);
+            
+            #output {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
+    <div class="background-animation"></div>
     <div class="container">
         <h1>Blog Generator</h1>
         <form id="blogForm">
             <label for="topic">Topic:</label>
-            <input type="text" id="topic" name="topic"  placeholder="Enter a topic">
-            <button type="submit"><i class="fas fa-pen"></i>Generate Blog</button>
+            <div class="input-container">
+                <input type="text" id="topic" name="topic" placeholder="Enter a blog topic..." autofocus>
+            </div>
+            <button type="submit" class="generate-btn">
+                <i class="fas fa-magic"></i>
+                Generate Blog
+            </button>
         </form>
+
         <div class="loading" id="loadingSpinner">
             <div class="spinner"></div>
         </div>
+
         <div id="output"></div>
-        <div id="notification"></div>
+
         <div class="btn-container" id="btnContainer" style="display: none;">
-            <button class="copy-btn" onclick="copyToClipboard()"><i class="far fa-copy"></i> Copy to Clipboard</button>
+            <button class="copy-btn" onclick="copyToClipboard()">
+                <i class="far fa-copy"></i> 
+                Copy to Clipboard
+            </button>
         </div>
+
         <div class="follow-container">
-            <p>Follow me on <a href='https://github.com/AquibPy' target='_blank'> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-              </svg></a></p>
+            <p>Follow me on</p>
+            <a href='https://github.com/AquibPy' target='_blank'>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
         </div>
+
         <footer>
             <p>© Made with ❤️ by <a href='https://www.linkedin.com/in/aquibpy/' target='_blank'>Mohd Aquib</a></p>
         </footer>
     </div>
+
+    <div id="notification-container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.2/marked.min.js"></script>
     <script>
@@ -257,39 +397,51 @@
         const loadingSpinner = document.getElementById('loadingSpinner');
         const output = document.getElementById('output');
         const btnContainer = document.getElementById('btnContainer');
-        const notificationContainer = document.getElementById('notification');
+        const notificationContainer = document.getElementById('notification-container');
 
         blogForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const topic = document.getElementById('topic').value;
+            
+            if (!topic.trim()) {
+                showNotification('Please enter a topic!');
+                return;
+            }
 
             loadingSpinner.style.display = 'flex';
+            output.innerHTML = '';
             btnContainer.style.display = 'none';
 
-            const response = await fetch('https://llm-pgc4.onrender.com/blog_generator', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'topic': topic,
-                }),
-            });
+            try {
+                const response = await fetch('https://llm-pgc4.onrender.com/blog_generator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'topic': topic,
+                    }),
+                });
 
-            loadingSpinner.style.display = 'none';
+                const data = await response.json();
 
-            const data = await response.json();
-
-            if (data && data.response) {
-                const htmlOutput = marked(data.response);
-                output.innerHTML = `<h2>Generated Blog:</h2>${htmlOutput}`;
-                btnContainer.style.display = 'flex';
-                showNotification('Blog generated successfully!');
-            } else {
-                output.innerHTML = '<p>No blog generated. Please try again.</p>';
-                btnContainer.style.display = 'none';
-                showNotification('Failed to generate blog. Please try again.');
+                if (data && data.response) {
+                    const htmlOutput = marked(data.response);
+                    output.innerHTML = `<h2>Generated Blog</h2>${htmlOutput}`;
+                    btnContainer.style.display = 'flex';
+                    showNotification('Blog generated successfully!');
+                } else {
+                    output.innerHTML = '<p>No blog generated. Please try again.</p>';
+                    btnContainer.style.display = 'none';
+                    showNotification('Failed to generate blog. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                output.innerHTML = '<p>An error occurred. Please try again later.</p>';
+                showNotification('Connection error. Check your internet connection.');
+            } finally {
+                loadingSpinner.style.display = 'none';
             }
         });
 
@@ -297,10 +449,11 @@
             const blogContent = output.innerText;
             navigator.clipboard.writeText(blogContent)
                 .then(() => {
-                    showNotification('Copied!');
+                    showNotification('Copied to clipboard!');
                 })
                 .catch((error) => {
                     console.error('Failed to copy blog content: ', error);
+                    showNotification('Failed to copy. Try again.');
                 });
         }
 
@@ -309,9 +462,10 @@
             notification.classList.add('notification');
             notification.textContent = message;
             notificationContainer.appendChild(notification);
+            
             setTimeout(() => {
                 notification.remove();
-            }, 2000);
+            }, 3000);
         }
     </script>
 </body>
