@@ -41,10 +41,11 @@ class EmployeeDatabaseManager:
         last_names = ['Smith', 'Johnson', 'Brown', 'Taylor', 'Williams', 'Jones']
         departments = ['HR', 'Finance', 'IT', 'Marketing', 'Operations']
         job_titles = {
-            'HR': ['HR Manager', 'HR Coordinator', 'HR Assistant'],
-            'Finance': ['Financial Analyst', 'Finance Manager', 'Accountant'],
-            'IT': ['Software Engineer', 'IT Specialist', 'System Administrator'],
-            'Marketing': ['Marketing Manager', 'Marketing Coordinator', 'Digital Marketer'],
+            'HR': ['HR Manager', 'HR Coordinator', 'HR Assistant', 'Recruiter'],
+            'Finance': ['Financial Analyst', 'Finance Manager', 'Accountant', 'Auditor'],
+            'IT': ['Software Engineer', 'IT Specialist', 'System Administrator','Data Scientist','Frontend Developer'],
+            'Marketing': ['Marketing Manager', 'Marketing Coordinator', 'Digital Marketer', 'SEO Specialist'],
+            'Sales': ['Sales Manager', 'Sales Associate', 'Sales Executive', 'Account Manager'],
             'Operations': ['Operations Manager', 'Operations Coordinator', 'Operations Analyst']
         }
 
@@ -56,7 +57,7 @@ class EmployeeDatabaseManager:
         department = random.choice(departments)
         title = random.choice(job_titles[department])
         email = self.random_email()
-        city = random.choice(['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'])
+        city = random.choice(['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix','Noida'])
         salary = random.randint(30000, 150000)  # Random salary between $30,000 and $150,000
         work_experience = random.randint(0, 20)  # Random work experience between 0 and 20 years
         return (employee_id, name, department, title, email, city, salary, work_experience)

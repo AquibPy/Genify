@@ -1,23 +1,23 @@
-GEMINI_PRO_1_5 = "gemini-1.5-pro-latest"
-GEMINI_FLASH = "gemini-1.5-flash-latest"
-GEMINI_FLASH_8B = "gemini-1.5-flash-8b"
+GEMINI_PRO_2_think = "gemini-2.0-flash-thinking-exp-01-21"
+# GEMINI_FLASH = "gemini-1.5-flash-latest"
+# GEMINI_FLASH_8B = "gemini-1.5-flash-8b"
 GOOGLE_EMBEDDING = "models/embedding-001"
 FAQ_FILE = 'data/faqs.csv'
 EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
-REDIS_PORT = 18804
+REDIS_PORT = 16789
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 qa_prompt = """
-    Given the following context and a question, generate an answer based on this context only.
-    In the answer try to provide as much text as possible from "response" section in the source document context without making much changes.
-    If the answer is not found in the context, kindly state "I don't know." Don't try to make up an answer.
+Given the following context and a question, generate an answer solely based on the provided context.
+In your answer, try to incorporate as much content as possible from the "response" section of the context, making only minimal modifications.
+Do not fabricate any information.
 
-    CONTEXT: {context}
+CONTEXT: {context}
 
-    QUESTION: {question}
-    """
+QUESTION: {input}
+"""
 invoice_prompt = """
                You are an expert in understanding invoices.
                You will receive input images as invoices &
@@ -31,7 +31,7 @@ prompt_pdf = """
     Answer the question as detailed as possible from the provided context, make sure to provide all the details, if the answer is not in
     provided context just say, "Answer is not available in the context !!!!!!!", don't provide the wrong answer\n\n
     Context:\n {context}?\n
-    Question: \n{question}\n
+    Question: \n{input}\n
 
     Answer:
     """
