@@ -32,7 +32,7 @@ job_crew = Crew(
 
 def run_job_crew(input_data):
     result = job_crew.kickoff(input_data)
-    return result
+    return str(result)
 
 if __name__=='__main__':
     job_agent_input = {

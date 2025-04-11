@@ -5,13 +5,12 @@ from .tasks import diagnose_task, treatment_task
 
 doc_crew = Crew(
     agents=[diagnostician, treatment_advisor],
-    tasks=[diagnose_task, treatment_task],
-    verbose=2
+    tasks=[diagnose_task, treatment_task]
 )
 
 def run_doc_crew(input_data):
     result = doc_crew.kickoff(inputs=input_data)
-    return result
+    return str(result)
 
 if __name__=='__main__':
     doc_agent_input ={

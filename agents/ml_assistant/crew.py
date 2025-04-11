@@ -28,7 +28,7 @@ def run_ml_crew(file_path, user_question, model="llama3-70b-8192"):
     # Format the input data for agents
     input_data = {
         "ml_problem": user_question,
-        "df": df.head(),
+        "df": df.head().to_json(orient="records"),
         "file_name": file_path
     }
 
@@ -40,7 +40,7 @@ def run_ml_crew(file_path, user_question, model="llama3-70b-8192"):
     )
 
     result = ml_crew.kickoff(input_data)
-    return result
+    return str(result)
 
 if __name__=="__main__":
     print(run_ml_crew(file_path="data/iris.csv",

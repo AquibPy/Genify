@@ -3,7 +3,7 @@ langchain_community
 google-generativeai
 langchain-google-genai
 faiss-cpu
-fastapi
+fastapi[standard]
 uvicorn
 pydantic
 python-dotenv
@@ -24,9 +24,9 @@ python-jose
 sendgrid
 llama-index-llms-groq
 llama-index-embeddings-langchain
-grpcio
-crewai
-crewai-tools
-proto-plus
-langchain-cohere
 slowapi
+# grpcio
+# crewai
+# crewai-tools
+# proto-plus
+# langchain-cohere

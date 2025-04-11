@@ -2,12 +2,10 @@ from crewai import Agent
 from .tools import web_search_tool, serper_search_tool
 import os
 import settings
-from langchain_google_genai import ChatGoogleGenerativeAI
 
-llm=ChatGoogleGenerativeAI(model=settings.GEMINI_FLASH,
-                           verbose=True,
-                           temperature=0.7,
-                           google_api_key=os.getenv("GOOGLE_API_KEY"))
+os.environ["GEMINI_API_KEY"] = os.environ.get('GEMINI_API_KEY')
+
+llm = "gemini/gemini-1.5-flash-8b"
 
 
 class JobAgents():

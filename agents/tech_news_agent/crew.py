@@ -11,7 +11,7 @@ crew=Crew(
 
 def run_crew(topic):
     result = crew.kickoff(inputs={'topic': topic})
-    return result
+    return str(result)
 
 if __name__=='__main__':
     print(run_crew(topic="AI in Constructions"))

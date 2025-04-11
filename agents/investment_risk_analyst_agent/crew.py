@@ -7,10 +7,9 @@ import os
 from .agents import data_analyst_agent,trading_strategy_agent,execution_agent,risk_management_agent
 from .tasks import data_analysis_task,strategy_development_task,risk_assessment_task,execution_planning_task
 
-llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest",
-                           verbose=True,
-                           temperature=0.7,
-                           google_api_key=os.getenv("GOOGLE_API_KEY"))
+os.environ["GEMINI_API_KEY"] = os.environ.get('GEMINI_API_KEY')
+
+llm = "gemini/gemini-1.5-flash-8b"
 
 
 financial_trading_crew = Crew(
@@ -31,7 +30,7 @@ financial_trading_crew = Crew(
 
 def run_investment_crew(input_data):
     result = financial_trading_crew.kickoff(inputs=input_data)
-    return result
+    return str(result)
 
 if __name__=='__main__':
     financial_trading_inputs ={

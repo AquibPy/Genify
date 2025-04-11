@@ -2,14 +2,12 @@ from crewai import Agent
 from .tools import search_tool,scrape_tool
 from dotenv import load_dotenv
 load_dotenv()
-from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 import settings
 
-llm=ChatGoogleGenerativeAI(model=settings.GEMINI_FLASH,
-                           verbose=True,
-                           temperature=0.5,
-                           google_api_key=os.getenv("GOOGLE_API_KEY"))
+os.environ["GEMINI_API_KEY"] = os.environ.get('GEMINI_API_KEY')
+
+llm = "gemini/gemini-1.5-flash-8b"
 
 data_analyst_agent = Agent(
     role="Data Analyst",

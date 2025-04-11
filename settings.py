@@ -1,22 +1,23 @@
-GEMINI_PRO_1_5 = "gemini-1.5-pro-latest"
-GEMINI_FLASH = "gemini-1.5-flash-latest"
+GEMINI_PRO_2_think = "gemini-2.0-flash-thinking-exp-01-21"
+# GEMINI_FLASH = "gemini-1.5-flash-latest"
+# GEMINI_FLASH_8B = "gemini-1.5-flash-8b"
 GOOGLE_EMBEDDING = "models/embedding-001"
 FAQ_FILE = 'data/faqs.csv'
 EMPLOYEE_DB = "data/employees.db"
 INSTRUCTOR_EMBEDDING = "sentence-transformers/all-MiniLM-l6-v2"
 VECTORDB_PATH = "faiss_index"
-REDIS_PORT = 19061
+REDIS_PORT = 16789
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 qa_prompt = """
-    Given the following context and a question, generate an answer based on this context only.
-    In the answer try to provide as much text as possible from "response" section in the source document context without making much changes.
-    If the answer is not found in the context, kindly state "I don't know." Don't try to make up an answer.
+Given the following context and a question, generate an answer solely based on the provided context.
+In your answer, try to incorporate as much content as possible from the "response" section of the context, making only minimal modifications.
+Do not fabricate any information.
 
-    CONTEXT: {context}
+CONTEXT: {context}
 
-    QUESTION: {question}
-    """
+QUESTION: {input}
+"""
 invoice_prompt = """
                You are an expert in understanding invoices.
                You will receive input images as invoices &
@@ -30,7 +31,7 @@ prompt_pdf = """
     Answer the question as detailed as possible from the provided context, make sure to provide all the details, if the answer is not in
     provided context just say, "Answer is not available in the context !!!!!!!", don't provide the wrong answer\n\n
     Context:\n {context}?\n
-    Question: \n{question}\n
+    Question: \n{input}\n
 
     Answer:
     """
@@ -153,4 +154,15 @@ You are a professional note-taker with expertise in distilling key insights from
 6. Actionable steps or recommendations
 
 Make sure the notes are well-structured and formatted as bullet points. The total length should not exceed 1000 words. Please summarize the following text:
+"""
+
+AGRILENS_DEFAULT_PROMPT = """
+Analyze the uploaded image, which is related to agriculture.
+Identify the key elements present in the image, such as crops, soil, pests, diseases, farming equipment, or other agricultural features.
+Provide the following details:
+1. Description: A brief overview of what is visible in the image.
+2. Detailed Identification: Name the type of crop, pest, disease, or farming equipment, if applicable.
+3. Condition Assessment: If the image contains crops, assess their health (e.g., healthy, stressed, diseased). If there are visible pests or diseases, specify their type and possible impact.
+4. Recommendations: Suggest actionable insights to improve the situation, such as applying fertilizers, pesticides, irrigation, or other agricultural practices.
+5. Additional Observations: Any other insights or anomalies you notice in the image relevant to agriculture.
 """

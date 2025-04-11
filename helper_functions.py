@@ -7,7 +7,8 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter,TokenTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -31,6 +32,7 @@ from llama_index import core
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import RouterQueryEngine
 import shutil
+import base64
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -53,7 +55,7 @@ embeddings = HuggingFaceInferenceAPIEmbeddings(
 def get_gemini_response(input, image_file, prompt):
     try:
         print(prompt,input)
-        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_PRO_2_think)
     
         response = model.generate_content([input, image_file[0], prompt])
         return response.text
@@ -62,7 +64,7 @@ def get_gemini_response(input, image_file, prompt):
 
 def get_gemini_response_health(image_file, prompt):
     try:
-        model = genai.GenerativeModel(settings.GEMINI_PRO_1_5)
+        model = genai.GenerativeModel(settings.GEMINI_PRO_2_think)
     
         response = model.generate_content([image_file[0], prompt])
         return response.text
@@ -76,24 +78,21 @@ def create_vector_db():
     vectordb.save_local(settings.VECTORDB_PATH)
 
 def get_qa_chain():
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.2)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO_2_think, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.2)
     vectordb = FAISS.load_local(settings.VECTORDB_PATH,google_embedding,allow_dangerous_deserialization=True)
     retriever = vectordb.as_retriever(score_threshold=0.7)
-    PROMPT = PromptTemplate(
-        template=settings.qa_prompt, input_variables=["context", "question"]
+    prompt = PromptTemplate(
+        template=settings.qa_prompt, input_variables=["context", "input"]
     )
 
-    chain = RetrievalQA.from_chain_type(llm=llm,
-                                        chain_type="stuff",
-                                        retriever=retriever,
-                                        input_key="query",
-                                        return_source_documents=True,
-                                        chain_type_kwargs={"prompt": PROMPT})
+    document_chain = create_stuff_documents_chain(llm, prompt)
 
-    return chain
+    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+
+    return retrieval_chain
 
 def get_url_doc_qa(url,doc):
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO_2_think, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     if url:
         loader = WebBaseLoader(url)
         data = loader.load()
@@ -108,12 +107,19 @@ def get_url_doc_qa(url,doc):
         docs = text_splitter.create_documents(doc)
 
     vectorstore = FAISS.from_documents(documents = docs,embedding=google_embedding)
-    chain = RetrievalQA.from_chain_type(llm=llm,
-                                        chain_type="stuff",
-                                        retriever=vectorstore.as_retriever(),
-                                        input_key="query",
-                                        return_source_documents=True)
-    return chain
+    system_prompt = (
+        "Use the given context to answer the question. "
+        "If you don't know the answer, say you don't know. "
+        "{context}"
+    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{input}")
+    ])
+    document_chain = create_stuff_documents_chain(llm, prompt)
+    retrieval_chain = create_retrieval_chain(vectorstore.as_retriever(), document_chain)
+
+    return retrieval_chain
 
 def extract_transcript_details(youtube_video_url):
     try:
@@ -135,20 +141,17 @@ def get_gemini_pdf(pdf):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
     vector_store = FAISS.from_texts(chunks, embedding=google_embedding)
-    llm = GoogleGenerativeAI(model= settings.GEMINI_FLASH, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
+    llm = GoogleGenerativeAI(model= settings.GEMINI_PRO_2_think, google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.7)
     retriever = vector_store.as_retriever(score_threshold=0.7)
-    PROMPT = PromptTemplate(
-        template=settings.prompt_pdf, input_variables=["context", "question"]
+    prompt = PromptTemplate(
+        template=settings.prompt_pdf, input_variables=["context", "input"]
     )
 
-    chain = RetrievalQA.from_chain_type(llm=llm,
-                                        chain_type="stuff",
-                                        retriever=retriever,
-                                        input_key="query",
-                                        return_source_documents=True,
-                                        chain_type_kwargs={"prompt": PROMPT})
+    document_chain = create_stuff_documents_chain(llm, prompt)
 
-    return chain
+    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+
+    return retrieval_chain
 
 def read_sql_query(query,db):
     conn=sqlite3.connect(db)
@@ -188,7 +191,7 @@ def questions_generator(doc):
     # splitter_ans_gen = TokenTextSplitter(chunk_size = 1000,chunk_overlap = 100)
     # document_answer_gen = splitter_ans_gen.split_documents(document_ques_gen)
 
-    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= settings.GEMINI_FLASH,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
+    llm_ques_gen_pipeline = ChatGoogleGenerativeAI(model= settings.GEMINI_PRO_2_think,google_api_key=os.getenv("GOOGLE_API_KEY"),temperature=0.3)
     PROMPT_QUESTIONS = PromptTemplate(template=settings.question_prompt_template, input_variables=["text"])
     REFINE_PROMPT_QUESTIONS = PromptTemplate(input_variables=["existing_answer", "text"],template=settings.question_refine_template)
     ques_gen_chain = load_summarize_chain(llm = llm_ques_gen_pipeline, 
@@ -291,7 +294,7 @@ def advance_rag_llama_index(pdf,model,question):
         pdf.file.close()
     llm = Groq(model=model,api_key=os.getenv("GROQ_API_KEY"))
     embed_model = HuggingFaceInferenceAPIEmbeddings(
-    api_key=os.getenv("HUGGINGFACE_API_KEY"), model_name=settings.INSTRUCTOR_EMBEDDING,query_instruction="Represent the query for retrieval: ")
+    api_key=os.getenv("HUGGINGFACE_API_KEY"), model_name=settings.INSTRUCTOR_EMBEDDING)
 
     core.Settings.llm = llm
     core.Settings.embed_model = embed_model
@@ -352,6 +355,9 @@ def extract_video_id(url):
             video_id = match.group(0)
             break
     return video_id
+
+def encode_image(image_data: bytes) -> str:
+    return base64.b64encode(image_data).decode("utf-8")
 
 if __name__ == "__main__":
     create_vector_db()
